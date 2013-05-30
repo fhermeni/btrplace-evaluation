@@ -1,0 +1,15 @@
+#Intellij IDEA files #
+*.iml
+*.class
+*.json
+*.log
+.classpath
+.project
+/testng.xml
+.idea/
+settings/
+target/
+# Package Files #
+*.jar
+*.war
+*.ear
