@@ -4,8 +4,6 @@ import btrplace.json.JSONConverterException;
 import btrplace.json.model.ModelConverter;
 import btrplace.json.model.constraint.SatConstraintsConverter;
 import btrplace.json.plan.ReconfigurationPlanConverter;
-import btrplace.model.DefaultMapping;
-import btrplace.model.DefaultModel;
 import btrplace.model.Model;
 import btrplace.model.constraint.SatConstraint;
 import btrplace.plan.ReconfigurationPlan;
@@ -45,8 +43,12 @@ public class BenchMark {
     public static void main(String[] args) {
         parseOptions(args);
         Model model = getModel();
-        Set<SatConstraint> constraints = getConstraints();
+        Set<SatConstraint> constraints = getConstraints(model);
         Model fixed_model = EvaluationTools.prepareModel(model, constraints);
+        if (fixed_model == null) {
+            System.err.println("Unable to fix the origin model");
+            System.exit(-1);
+        }
         System.out.println("Current Load: " + EvaluationTools.currentLoad(fixed_model));
         if (cont) for (SatConstraint c : constraints) c.setContinuous(true);
         switch (EventType.valueOf(event)) {
@@ -72,24 +74,25 @@ public class BenchMark {
 
     public static Model getModel() {
         ModelConverter modelConverter = new ModelConverter();
-        Model m = new DefaultModel(new DefaultMapping());
         try {
-            m = modelConverter.fromJSON(new File(model_file));
+            return modelConverter.fromJSON(new File(model_file));
         } catch (IOException e) {
             System.err.println(e.getMessage());
-            System.exit(0);
+            return null;
         } catch (JSONConverterException e) {
             System.err.println(e.getMessage());
-            System.exit(0);
+            return null;
         }
-        return m;
     }
 
-    public static Set<SatConstraint> getConstraints() {
+    public static Set<SatConstraint> getConstraints(Model model) {
         SatConstraintsConverter satConstraintsConverter = new SatConstraintsConverter();
         Set<SatConstraint> ctrs = new HashSet<SatConstraint>();
         try {
             for (String s : constraints) {
+//                SatConstraint satConstraint = satConstraintsConverter.fromJSON(new File(s));
+//                ctrs.add(satConstraint);
+                satConstraintsConverter.setModel(model);
                 List<SatConstraint> satConstraint = satConstraintsConverter.listFromJSON(new File(s));
                 ctrs.addAll(satConstraint);
             }

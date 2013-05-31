@@ -10,6 +10,7 @@ import org.apache.commons.cli.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,6 +34,7 @@ public class PlanChecker {
         try {
             Set<SatConstraint> dConstr = new HashSet<SatConstraint>();
             ReconfigurationPlan plan = planConverter.fromJSON(new File(plan_file));
+            satConstraintsConverter.setModel(plan.getOrigin());
             for (String s : constraints) {
                 List<SatConstraint> satConstraint = satConstraintsConverter.listFromJSON(new File(s));
                 dConstr.addAll(new HashSet<SatConstraint>(satConstraint));
@@ -100,11 +102,7 @@ public class PlanChecker {
                 plan_file = line.getOptionValue("p");
             }
 
-
-            constraints = new HashSet<String>();
-            for (String s : line.getArgs()) {
-                constraints.add(s);
-            }
+            constraints = new HashSet<String>(Arrays.asList(line.getArgs()));
 
         } catch (ParseException e) {
             System.err.println("Error: " + e.getMessage());

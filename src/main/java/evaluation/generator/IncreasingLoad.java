@@ -1,6 +1,7 @@
 package evaluation.generator;
 
 import btrplace.model.Model;
+import btrplace.model.VM;
 import btrplace.model.constraint.Preserve;
 import btrplace.model.constraint.SatConstraint;
 import btrplace.model.view.ShareableResource;
@@ -25,16 +26,15 @@ public class IncreasingLoad extends VariationType {
 
     public ReconfigurationPlan run() {
         constraints.addAll(preserveForInvolveVMs());
-        ReconfigurationPlan plan = EvaluationTools.solve(cra, model, constraints);
-        return plan;
+        return EvaluationTools.solve(cra, model, constraints);
     }
 
     private Set<SatConstraint> preserveConstraints(Model model) {
         Set<SatConstraint> constraints = new HashSet<SatConstraint>();
-        Set<UUID> vms = model.getMapping().getRunningVMs();
-        Iterator<UUID> iter = vms.iterator();
+        Set<VM> vms = model.getMapping().getRunningVMs();
+        Iterator<VM> iter = vms.iterator();
         for (int i = 0; iter.hasNext() && i < vms.size() / 2; i++) {
-            UUID vm = iter.next();
+            VM vm = iter.next();
             constraints.add(new Preserve(Collections.singleton(vm), "cpu", 4));
         }
         return constraints;
@@ -45,8 +45,9 @@ public class IncreasingLoad extends VariationType {
 
         Set<SatConstraint> additional_constraint = new HashSet<SatConstraint>();
         for (SatConstraint c : constraints) {
-            for (UUID vm : c.getInvolvedVMs()) {
-                additional_constraint.add(new Preserve(new HashSet<UUID>(Collections.singleton(vm)), "cpu", sr.get(vm) + 2));
+            for (VM vm : c.getInvolvedVMs()) {
+                additional_constraint.add(new Preserve(new HashSet<VM>(Collections.singleton(vm)),
+                        "cpu", sr.getConsumption(vm) + 2));
             }
         }
         return additional_constraint;

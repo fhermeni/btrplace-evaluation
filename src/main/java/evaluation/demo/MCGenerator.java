@@ -84,6 +84,7 @@ public class MCGenerator {
             System.err.println("Error: " + e.getMessage());
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("generator", options, true);
+            System.exit(-1);
         }
     }
 
@@ -98,7 +99,7 @@ public class MCGenerator {
                 break;
 
             case spread:
-                Spread spread = new Spread(gen.getSpreadVMs(vmsSize), continuous);
+                Spread spread = new Spread(gen.getRandomVMs(vmsSize), continuous);
                 constraintSet.add(spread);
                 break;
 
@@ -122,7 +123,7 @@ public class MCGenerator {
                 constraintSet.add(quarantine);
                 break;
         }
-
+        System.out.println(model.getMapping());
         recordModel(model);
         recordConstraints(constraintSet);
     }

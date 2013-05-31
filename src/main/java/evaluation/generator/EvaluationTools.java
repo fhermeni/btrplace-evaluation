@@ -1,8 +1,9 @@
 package evaluation.generator;
 
-import btrplace.model.DefaultModel;
 import btrplace.model.Mapping;
 import btrplace.model.Model;
+import btrplace.model.Node;
+import btrplace.model.VM;
 import btrplace.model.constraint.SatConstraint;
 import btrplace.model.view.ShareableResource;
 import btrplace.plan.ReconfigurationPlan;
@@ -15,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * User: TU HUYNH DANG
@@ -92,33 +92,32 @@ public class EvaluationTools {
     }
 
     static public Model prepareModel(Model model, Set<SatConstraint> satConstraints) {
-        Model result = new DefaultModel(model.getMapping());
         try {
             ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
             ReconfigurationPlan plan = cra.solve(model, satConstraints);
-            result = plan.getResult();
+            return plan.getResult();
 
         } catch (SolverException e) {
-            System.err.println(e.getMessage());   //To change body of catch statement use File | Settings | File Templates.
+            System.err.println(e.getMessage());
+            return null;
         }
-        return result;
     }
 
     static public int currentLoad(Model model) {
         Mapping mapping = model.getMapping();
-        Set<UUID> onlineNodes = mapping.getOnlineNodes();
-        Set<UUID> runningVMs = mapping.getRunningVMs();
+        Set<Node> onlineNodes = mapping.getOnlineNodes();
+        Set<VM> runningVMs = mapping.getRunningVMs();
         ShareableResource sr = (ShareableResource) model.getView("ShareableResource.cpu");
-        int capacity = sr.sum(onlineNodes, true);
-        int used = sr.sum(runningVMs, true);
+        int capacity = sr.sumCapacities(onlineNodes, true);
+        int used = sr.sumConsumptions(runningVMs, true);
         return (100 * used) / capacity;
     }
 
     static public int capacity(Model model) {
         Mapping mapping = model.getMapping();
-        Set<UUID> onlineNodes = mapping.getOnlineNodes();
+        Set<Node> onlineNodes = mapping.getOnlineNodes();
         ShareableResource sr = (ShareableResource) model.getView("ShareableResource.cpu");
-        return sr.sum(onlineNodes, true);
+        return sr.sumCapacities(onlineNodes, true);
 
     }
 }

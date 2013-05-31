@@ -1,6 +1,8 @@
 package evaluation.generator;
 
 import btrplace.model.Model;
+import btrplace.model.Node;
+import btrplace.model.VM;
 import btrplace.model.constraint.Offline;
 import btrplace.model.constraint.SatConstraint;
 import btrplace.plan.ReconfigurationPlan;
@@ -8,7 +10,6 @@ import btrplace.plan.ReconfigurationPlan;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * User: TU HUYNH DANG
@@ -31,16 +32,15 @@ public class HardwareFailures extends VariationType {
         offIds = new HashSet<Integer>(node_size);
         rand = new Random(System.nanoTime() % 100000);
         constraints.add(shutdownRandomNode());
-        ReconfigurationPlan plan = EvaluationTools.solve(cra, model, constraints);
-        return plan;
+        return EvaluationTools.solve(cra, model, constraints);
     }
 
 
     public SatConstraint shutdownRandomNode() {
 
-        Set<UUID> shutdownNodes = new HashSet<UUID>();
+        Set<Node> shutdownNodes = new HashSet<Node>();
         for (SatConstraint c : constraints) {
-            for (UUID vm : c.getInvolvedVMs()) {
+            for (VM vm : c.getInvolvedVMs()) {
                 shutdownNodes.add(model.getMapping().getVMLocation(vm));
             }
             break;

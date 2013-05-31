@@ -1,6 +1,7 @@
 package evaluation.generator;
 
 import btrplace.model.Model;
+import btrplace.model.VM;
 import btrplace.model.constraint.Preserve;
 import btrplace.model.constraint.SatConstraint;
 import btrplace.model.view.ShareableResource;
@@ -21,10 +22,8 @@ public class CpuPeak extends VariationType {
     }
 
     public ReconfigurationPlan run() {
-
         constraints.addAll(preserveForInvolveVMs());
-        ReconfigurationPlan plan = EvaluationTools.solve(cra, model, constraints);
-        return plan;
+        return EvaluationTools.solve(cra, model, constraints);
     }
 
     public int getPercent() {
@@ -42,17 +41,19 @@ public class CpuPeak extends VariationType {
         ShareableResource sr = (ShareableResource) model.getView("ShareableResource.cpu");
         Set<SatConstraint> additional_constraint = new HashSet<SatConstraint>();
         for (SatConstraint c : constraints) {
-            for (UUID vm : c.getInvolvedVMs()) {
-                additional_constraint.add(new Preserve(new HashSet<UUID>(Collections.singleton(vm)), "cpu", sr.get(vm) + 1));
+            for (VM vm : c.getInvolvedVMs()) {
+                additional_constraint.add(new Preserve(new HashSet<VM>(Collections.singleton(vm)),
+                        "cpu", sr.getConsumption(vm) + 1));
                 if (size-- <= 0) break;
             }
         }
-        ArrayList<UUID> list = new ArrayList<UUID>(model.getMapping().getAllVMs());
+        ArrayList<VM> list = new ArrayList<VM>(model.getMapping().getAllVMs());
         while (size > 0) {
             Random rand = new Random(System.nanoTime() % 100000);
             int i = rand.nextInt(model.getMapping().getRunningVMs().size());
-            UUID vm = list.get(i);
-            additional_constraint.add(new Preserve(new HashSet<UUID>(Collections.singleton(vm)), "cpu", sr.get(vm) + 1));
+            VM vm = list.get(i);
+            additional_constraint.add(new Preserve(new HashSet<VM>(Collections.singleton(vm)),
+                    "cpu", sr.getConsumption(vm) + 1));
             size--;
         }
         return additional_constraint;
