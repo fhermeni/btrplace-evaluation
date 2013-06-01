@@ -1,6 +1,74 @@
-#Evaluation of continuous satisfaction of the constraints in BtrPlace
+tion of continuous satisfaction of the constraints in BtrPlace
 
 ## Introduction
+
+[BtrPlace](http://btrp.inria.fr) is a virtual machines placement algorithm for hosting platforms. It can be customized by administrators to ensure the satisfaction of SLAs and to perform the administrative management operations.
+
+In this project, we evaluate the level of satisfaction of the constraint during the reconfiguration of datacenters due to the hardware failures or increasing in the workload of VMs.
+
+
+#Evaluation Protocol
+To evaluation Btrplace, We use the specification of the [Open Cirrus Cloud Computing Testbed](http://opencirrus.org) and the [Open Cloud Testbed](http://opencloudconsortium.org). Relying on the detail specification of Open  Cirrus, we simulate the datacenters as follow:    
+**Open Cirrus** is a federated heterogeneous distributed data centers. It consists of several different geographic sites, each has 1000+ cores. Below is the data from [Open Cirrus: A global cloud computing testbed](http://www.cs.cmu.edu/~droh/papers/opencirrus-ieeecomputer.pdf)
+<table>
+  <tr>
+    <th>Site</th>
+    <th>#Cores</th>
+    <th>#Servers</th>
+    <th>Disk Size</th>
+  </tr>
+  <tr>
+    <td>HP</td>
+    <td>1024</td>
+    <td>256</td>
+    <td>3.3TB</td>
+  </tr>
+  <tr>
+    <td>IDA</td>
+    <td>2400</td>
+    <td>300</td>
+    <td>4.8TB</td>
+  </tr>
+  <tr>
+    <td>Intel</td>
+    <td>1364</td>
+    <td>198</td>
+    <td>1.77TB</td>
+  </tr>
+  <tr>
+    <td>KIT</td>
+    <td>2656</td>
+    <td>232</td>
+    <td>10TB</td>
+  </tr>
+  <tr>
+    <td>UIUC</td>
+    <td>1024</td>
+    <td>128</td>
+    <td>2TB</td>
+  </tr>
+  <tr>
+    <td>Yahoo</td>
+    <td>3200</td>
+    <td>480</td>
+    <td>2.4TB</td>
+  </tr>
+</table>
+
+**Open Cloud Testbed** has 120 commondity nodes in four data centers which are connected with a high performance 10Gb/s network. The specification of each node is shown below:
+<table>
+  <tr>
+    <th>#Cores</th>
+    <th>RAM</th>
+    <th>Disk Size</th>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td>12GB</td>
+    <td>1TB</td>
+</table>
+
+## Tools
 
 The evaluation contain:  
 * Model & Constraints Generator  
@@ -12,8 +80,6 @@ The evaluation contain:
 **Benchmark:** fixes the model if it doesn't satisfy the constraint, then the benchmark creates the increase in workload of VM by add the Preserve constraints on the set of VMs invloved in the tested constraints.
 
 **PlanChecker:** Use to check whether the plan computed in the discrete satisfaction of the constraints satisfies their continuous satisfaction.
-
-## Usage
 
 **MCGenerator** -n #node -m #vm [-ci] [-t type] [-s sizeVmSet] [-z sizeNodeSet]  
 -c  Produce continuous satisfaction constraint  
@@ -39,3 +105,4 @@ constraints: sequence listed constraints to be satisfied in the reconfiguration
 -c  Check the continuous satisfaction of the constraints  
 -p  The plan to be checked  
 constraints: sequence listed constraints to be considered
+
