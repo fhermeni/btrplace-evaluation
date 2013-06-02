@@ -95,6 +95,7 @@ public class MCGenerator {
         switch (name) {
             case among:
                 Among among = new Among(gen.getRandomVMs(vmsSize), gen.getDistinctSet(nodeSize), continuous);
+
                 constraintSet.add(among);
                 break;
 

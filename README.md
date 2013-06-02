@@ -1,15 +1,19 @@
-tion of continuous satisfaction of the constraints in BtrPlace
-
 ## Introduction
 
-[BtrPlace](http://btrp.inria.fr) is a virtual machines placement algorithm for hosting platforms. It can be customized by administrators to ensure the satisfaction of SLAs and to perform the administrative management operations.
+[BtrPlace](http://btrp.inria.fr) is a virtual machines placement algorithm for hosting platforms. It can be customized
+by administrators to ensure the satisfaction of SLAs and to perform the administrative management operations.
 
-In this project, we evaluate the level of satisfaction of the constraint during the reconfiguration of datacenters due to the hardware failures or increasing in the workload of VMs.
+In this project, we evaluate the level of satisfaction of the constraint during the reconfiguration of datacenters due
+to the hardware failures or increasing in the workload of VMs.
 
 
 #Evaluation Protocol
-To evaluation Btrplace, We use the specification of the [Open Cirrus Cloud Computing Testbed](http://opencirrus.org) and the [Open Cloud Testbed](http://opencloudconsortium.org). Relying on the detail specification of Open  Cirrus, we simulate the datacenters as follow:    
-**Open Cirrus** is a federated heterogeneous distributed data centers. It consists of several different geographic sites, each has 1000+ cores. Below is the data from [Open Cirrus: A global cloud computing testbed](http://www.cs.cmu.edu/~droh/papers/opencirrus-ieeecomputer.pdf)
+To evaluation Btrplace, We use the specification of the [Open Cirrus Cloud Computing Testbed](http://opencirrus.org)
+and the [Open Cloud Testbed](http://opencloudconsortium.org). Relying on the detail specification of Open  Cirrus, we
+simulate the datacenters as follow:
+**Open Cirrus** is a federated heterogeneous distributed data centers. It consists of several different geographic
+sites, each has 1000+ cores. Below is the data from
+[Open Cirrus: A global cloud computing testbed](http://www.cs.cmu.edu/~droh/papers/opencirrus-ieeecomputer.pdf)
 <table>
   <tr>
     <th>Site</th>
@@ -55,7 +59,8 @@ To evaluation Btrplace, We use the specification of the [Open Cirrus Cloud Compu
   </tr>
 </table>
 
-**Open Cloud Testbed** has 120 commondity nodes in four data centers which are connected with a high performance 10Gb/s network. The specification of each node is shown below:
+**Open Cloud Testbed** has 120 commondity nodes in four data centers which are connected with a high performance
+10Gb/s network. The specification of each node is shown below:
 <table>
   <tr>
     <th>#Cores</th>
@@ -68,6 +73,16 @@ To evaluation Btrplace, We use the specification of the [Open Cirrus Cloud Compu
     <td>1TB</td>
 </table>
 
+In each model, we run many n-tiers applications that have multiple replicas for each tier to ensure high availability,
+fault tolerance and high performance properties. For instance, a 3-tier application has 4 VMs for the Presentation Layer,
+8 VMs for Business Logic and Data Layers.
+
+Then we simulate the increasing load of the applications by preserving more CPU/RAM for some arbitrary VMs until it
+causes the consolidation happens. We record the reconfiguration plans computed by BtrPlace both for discrete restriction
+and continuous restriction of the constraints. After that, we compare the time needed to compute the plans, and to
+complete the reconfiguration process. Additionally, we compare the number of actions and the dependency between the action
+specified in the plans.
+
 ## Tools
 
 The evaluation contain:  
@@ -75,11 +90,15 @@ The evaluation contain:
 * Benchmark  
 * PlanChecker  
 
-**MCGenerator:**  Generates a model and a constraint associates with the model. One can specify the number of nodes and VMs in the model. Furthermore, for some constraints need a set of VM or a set of Node, this can be done by passing numbers in command's parameters.
+**MCGenerator:**  Generates a model and a constraint associates with the model. One can specify the number of nodes and
+ VMs in the model. Furthermore, for some constraints need a set of VM or a set of Node, this can be done by passing
+ numbers in command's parameters.
 
-**Benchmark:** fixes the model if it doesn't satisfy the constraint, then the benchmark creates the increase in workload of VM by add the Preserve constraints on the set of VMs invloved in the tested constraints.
+**Benchmark:** fixes the model if it doesn't satisfy the constraint, then the benchmark creates the increase in workload
+ of VM by add the Preserve constraints on the set of VMs invloved in the tested constraints.
 
-**PlanChecker:** Use to check whether the plan computed in the discrete satisfaction of the constraints satisfies their continuous satisfaction.
+**PlanChecker:** Use to check whether the plan computed in the discrete satisfaction of the constraints satisfies their
+continuous satisfaction.
 
 **MCGenerator** -n #node -m #vm [-ci] [-t type] [-s sizeVmSet] [-z sizeNodeSet]  
 -c  Produce continuous satisfaction constraint  

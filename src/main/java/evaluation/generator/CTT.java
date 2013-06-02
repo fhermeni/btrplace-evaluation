@@ -29,10 +29,13 @@ public class CTT {
         // Add compute building block nodes
         for (int i = 0; i < 128; i++) {
             Node node = model.newNode();
+//            cpu.setCapacity(node, 8);
             cbb.add(node);
+            model.getMapping().addOnlineNode(node);
 
         }
         // Add head nodes
+        /*
         for (int i = 0; i < 2; i++) {
             Node node = model.newNode();
             cbb.add(node);
@@ -40,15 +43,16 @@ public class CTT {
             storage.setCapacity(node, 292);
         }
         // Add File Servers
+
         for (int i = 0; i < 4; i++) {
             Node node = model.newNode();
             cbb.add(node);
             storage.setCapacity(node, 72 * TB);
         }
+        */
         model.attach(cpu);
         model.attach(ram);
         model.attach(storage);
-
         ModelConverter converter = new ModelConverter();
         try {
             converter.toJSON(model, new File("OpenCirrus.json"));

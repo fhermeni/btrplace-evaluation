@@ -32,21 +32,6 @@ public class EvaluationTools {
         return true;
     }
 
-    static public boolean checkPlan(ReconfigurationPlan plan, Set<SatConstraint> co) {
-        for (SatConstraint c : co) {
-            if (c.isContinuous()) {
-                if (!c.isSatisfied(plan)) {
-                    return false;
-                }
-            } else {
-                if (!c.isSatisfied(plan.getResult())) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
     static public int getNumberOfDelayedAction(ReconfigurationPlan plan) {
         int i = 0;
         for (Action a : plan) {

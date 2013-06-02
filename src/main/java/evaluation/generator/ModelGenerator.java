@@ -9,10 +9,7 @@ import btrplace.solver.SolverException;
 import btrplace.solver.choco.ChocoReconfigurationAlgorithm;
 import btrplace.solver.choco.DefaultChocoReconfigurationAlgorithm;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 /**
  * User: TU HUYNH DANG
@@ -151,8 +148,8 @@ public class ModelGenerator {
         return node_set;
     }
 
-    public Set<Set<Node>> getDistinctSet(int Number_of_Set) {
-        Set<Set<Node>> collection = new HashSet<Set<Node>>();
+    public Collection<Collection<Node>> getDistinctSet(int Number_of_Set) {
+        Collection<Collection<Node>> collection = new HashSet<Collection<Node>>();
         int j = 0;
         for (int i = 0; i < Number_of_Set; i++) {
             Set<Node> tmpSet = new HashSet<Node>();
