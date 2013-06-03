@@ -1,23 +1,13 @@
 package evaluation.demo;
 
-import btrplace.json.JSONConverterException;
-import btrplace.json.model.ModelConverter;
-import btrplace.json.model.constraint.SatConstraintsConverter;
-import btrplace.json.plan.ReconfigurationPlanConverter;
 import btrplace.model.Model;
 import btrplace.model.constraint.SatConstraint;
 import btrplace.plan.ReconfigurationPlan;
-import evaluation.generator.CpuPeak;
-import evaluation.generator.EvaluationTools;
-import evaluation.generator.HardwareFailures;
-import evaluation.generator.IncreasingLoad;
+import evaluation.generator.*;
 import org.apache.commons.cli.*;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -31,7 +21,7 @@ public class BenchMark {
     private static String model_file = "";
     private static String output_file = "";
     private static String event = "";
-    private static Set<String> constraints;
+    private static Set<String> cstr_files;
     private static int iPercent = 0;
 
 
@@ -42,8 +32,8 @@ public class BenchMark {
 
     public static void main(String[] args) {
         parseOptions(args);
-        Model model = getModel();
-        Set<SatConstraint> constraints = getConstraints(model);
+        Model model = ConverterTools.getModelFromFile(model_file);
+        Set<SatConstraint> constraints = ConverterTools.getConstraints(model, cstr_files);
         Model fixed_model = EvaluationTools.prepareModel(model, constraints);
         if (fixed_model == null) {
             System.err.println("Unable to fix the origin model");
@@ -70,58 +60,6 @@ public class BenchMark {
         }
 
         System.exit(0);
-    }
-
-    public static Model getModel() {
-        ModelConverter modelConverter = new ModelConverter();
-        try {
-            return modelConverter.fromJSON(new File(model_file));
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-            return null;
-        } catch (JSONConverterException e) {
-            System.err.println(e.getMessage());
-            return null;
-        }
-    }
-
-    public static Set<SatConstraint> getConstraints(Model model) {
-        SatConstraintsConverter satConstraintsConverter = new SatConstraintsConverter();
-        Set<SatConstraint> ctrs = new HashSet<SatConstraint>();
-        try {
-            for (String s : constraints) {
-//                SatConstraint satConstraint = satConstraintsConverter.fromJSON(new File(s));
-//                ctrs.add(satConstraint);
-                satConstraintsConverter.setModel(model);
-                List<SatConstraint> satConstraint = satConstraintsConverter.listFromJSON(new File(s));
-                ctrs.addAll(satConstraint);
-            }
-
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-            System.exit(-1);
-        } catch (JSONConverterException e) {
-            System.err.println(e.getMessage());
-            System.exit(-1);
-        }
-        return ctrs;
-    }
-
-    public static void recordPlan(ReconfigurationPlan plan) {
-        if (plan == null) {
-            System.out.println("Plan is NULL");
-            System.exit(0);
-        }
-        ReconfigurationPlanConverter rpc = new ReconfigurationPlanConverter();
-        try {
-            rpc.toJSON(plan, new File(output_file));
-        } catch (JSONConverterException e) {
-            System.err.println(e.getMessage());
-            System.exit(-1);
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-            System.exit(-1);
-        }
     }
 
     private static void parseOptions(String[] args) {
@@ -154,7 +92,7 @@ public class BenchMark {
             if (line.hasOption("i")) {
                 iPercent = Integer.parseInt(line.getOptionValue("i"));
             }
-            constraints = new HashSet<String>(Arrays.asList(line.getArgs()));
+            cstr_files = new HashSet<String>(Arrays.asList(line.getArgs()));
 
             if (line.hasOption("h")) {
                 HelpFormatter formatter = new HelpFormatter();
@@ -172,21 +110,9 @@ public class BenchMark {
             System.out.println("The constraints are already satisfied or BtrPlace has no solution");
             System.exit(-1);
         }
-        recordPlan(plan);
+        ConverterTools.planToFile(plan, output_file);
         System.out.println("After Load: " + EvaluationTools.currentLoad(plan.getResult()));
         System.out.println(String.format("Plan: %d actions\t%d seconds", plan.getSize(), plan.getDuration()));
     }
 
-    public static void recordModel(Model model) {
-        ModelConverter modelConverter = new ModelConverter();
-        try {
-            modelConverter.toJSON(model, new File("result" + model_file));
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-            System.exit(0);
-        } catch (JSONConverterException e) {
-            System.err.println(e.getMessage());
-            System.exit(0);
-        }
-    }
 }

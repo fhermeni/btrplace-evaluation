@@ -50,7 +50,7 @@ public class RUBBoS {
 
     }
 
-    public static void setModel(Model model) {
+    public static void setInfrastructure(Model model) {
         RUBBoS.model = model;
     }
 
@@ -73,6 +73,10 @@ public class RUBBoS {
 
     public ArrayList<Set<VM>> getTiers() {
         return tiers;
+    }
+
+    public static Model getModel() {
+        return model;
     }
 
     public void print() {

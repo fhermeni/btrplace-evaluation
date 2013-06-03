@@ -1,4 +1,4 @@
-package evaluation.demo;
+package evaluation.generator;
 
 import btrplace.model.DefaultModel;
 import btrplace.model.Model;
