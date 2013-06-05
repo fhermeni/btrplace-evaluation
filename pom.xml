@@ -23,7 +23,7 @@
         <dependency>
             <groupId>btrplace</groupId>
             <artifactId>solver-bundle</artifactId>
-            <version>0.30-SNAPSHOT</version>
+            <version>0.30</version>
             <exclusions>
                 <exclusion>
                     <groupId>ch.qos.logback</groupId>

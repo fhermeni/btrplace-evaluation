@@ -4,7 +4,6 @@ import btrplace.model.Model;
 import btrplace.model.VM;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -26,12 +25,17 @@ public class RUBBoS {
         tier2 = new HashSet<VM>();
         tier3 = new HashSet<VM>();
         tier4 = new HashSet<VM>();
-        tiers = new ArrayList<Set<VM>>(Arrays.asList(tier1, tier2, tier3, tier4));
+        tiers = new ArrayList<Set<VM>>() {{
+            add(tier1);
+            add(tier2);
+            add(tier3);
+            add(tier4);
+        }};
 
         for (int i = 0; i < a; i++) {
-                VM vm = model.newVM();
-                tier1.add(vm);
-            }
+            VM vm = model.newVM();
+            tier1.add(vm);
+        }
 
         for (int i = 0; i < b; i++) {
             VM vm = model.newVM();

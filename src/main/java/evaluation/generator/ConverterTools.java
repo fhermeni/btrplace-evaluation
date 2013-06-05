@@ -22,7 +22,7 @@ import java.util.Set;
  */
 public class ConverterTools {
 
-    public static void constraintsToFile(Set<SatConstraint> constraints, String constraint_name) {
+    public static void constraintsToFile(Collection<SatConstraint> constraints, String constraint_name) {
         SatConstraintsConverter converter = new SatConstraintsConverter();
         try {
             converter.toJSON(constraints, new File(constraint_name + "Constraint.json"));
@@ -36,11 +36,11 @@ public class ConverterTools {
         }
     }
 
-    public static Set<SatConstraint> getConstraints(Model model, Collection<String> constraints) {
+    public static Set<SatConstraint> getConstraints(Model model, Collection<String> constraint_files) {
         SatConstraintsConverter satConstraintsConverter = new SatConstraintsConverter();
         Set<SatConstraint> ctrs = new HashSet<SatConstraint>();
         try {
-            for (String s : constraints) {
+            for (String s : constraint_files) {
                 satConstraintsConverter.setModel(model);
                 List<SatConstraint> satConstraint = satConstraintsConverter.listFromJSON(new File(s));
                 ctrs.addAll(satConstraint);

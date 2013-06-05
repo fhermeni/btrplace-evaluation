@@ -31,11 +31,12 @@ public class ConstraintGenerator {
         cg.parseOptions(args);
         Model model = ConverterTools.getModelFromFile(cg.model_file);
         Collection<SatConstraint> collection = cg.generateConstraints(model, Constraint.valueOf(cg.constraint_name), cg.number);
-        for (SatConstraint s : collection) {
-            System.out.println(s);
-        }
+        String name = (cg.continuous) ? "C" : "D";
+        ConverterTools.constraintsToFile(collection, name + cg.constraint_name);
+        System.out.println(String.format("Generate %d %s constraints successfully", cg.number, cg.constraint_name));
 
     }
+
     public Collection<SatConstraint> generateConstraints(Model model, Constraint name, int number) {
         Collection<SatConstraint> collection = new ArrayList<SatConstraint>();
         while (number > 0) {
