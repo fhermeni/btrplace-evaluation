@@ -8,7 +8,7 @@ to the hardware failures or increasing in the workload of VMs.
 
 
 #Evaluation Protocol
-To evaluation Btrplace, We use the specification of the [Dell Active System 50](http://www.dell.com/us/business/p/dell-vstart-50/pd), a pre-built managed converged system wfor small datacenter. The worknode specification details are listed below.  
+To evaluation Btrplace, We use the specification of the [Dell Active System 50](http://www.dell.com/us/business/p/dell-vstart-50/pd), a pre-built managed converged system for small datacenter. The work-node specification details are listed below.
 Dell PowerEdge R620 Server: 2S/1U, 8 cores/socket, 2 threads / core.  64GB of memory.   
 Storage: Local Hard Drive: 300GB. Storage array: 7.2TB  
 **Server Summary**
@@ -22,10 +22,10 @@ Storage: Local Hard Drive: 300GB. Storage array: 7.2TB
   </tr>
   <tr>
     <td>2</td>
-  <td>8</td>
-	<td>16</td>
+  <td>16</td>
+	<td>32</td>
     <td>64GB</td>
-    <td>320TB</td>
+    <td>320GB</td>
 </table>
 
 **Datacenter configuration**   
@@ -46,11 +46,11 @@ Application's workload increases, more VMs needed for each tier to handle the in
 the cloned VMs. 
 
 3. Hardware Failure / Network Maintenance  
-The average rate of hardware failure in a datacenter is around 5% at any givent moment. The network maintenance operation also brings down some nodes.
+The average rate of hardware failure in a datacenter is around 5% at any given moment. The network maintenance operation also brings down some nodes.
 We simulate this event by turning off random nodes in the datacenter. 
 
 4. BootStorm VM  
-There are some moments during a working day, hundreds of VMs are powered on / off simutaneously (the beginning and the end of a working day). It may 
+There are some moments during a working day, hundreds of VMs are powered on / off simultaneously (the beginning and the end of a working day). It may
 affect the performance of the applications. The consolidation manager need to reconfigure the datacenter for load balancing and satisfaction of SLAs.
 
 **Evaluation**
@@ -68,10 +68,10 @@ The evaluation contain:
 
 **MCGenerator:**  Generates a model and a constraint associates with the model. One can specify the number of nodes and
  VMs in the model. Furthermore, for some constraints need a set of VM or a set of Node, this can be done by passing
- numbers in command's parameters.
+ numbers in command parameters.
 
 **Benchmark:** fixes the model if it doesn't satisfy the constraint, then the benchmark creates the increase in workload
- of VM by add the Preserve constraints on the set of VMs invloved in the tested constraints.
+ of VM by add the Preserve constraints on the set of VMs involved in the tested constraints.
 
 **PlanChecker:** Use to check whether the plan computed in the discrete satisfaction of the constraints satisfies their
 continuous satisfaction.
