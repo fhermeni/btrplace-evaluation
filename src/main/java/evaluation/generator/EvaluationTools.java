@@ -23,7 +23,6 @@ import java.util.Set;
  * Time: 2:20 PM
  */
 public class EvaluationTools {
-    private static final Logger log = LoggerFactory.getLogger("Tools");
 
     static public boolean satisfy(Model model, Collection<SatConstraint> co) {
         for (SatConstraint c : co) {
@@ -59,7 +58,6 @@ public class EvaluationTools {
         try {
             ReconfigurationPlan p = cra.solve(model, constraints);
             if (p != null) {
-                log.info(cra.getSolvingStatistics().toString());
                 return p;
             }
         } catch (SolverException e) {

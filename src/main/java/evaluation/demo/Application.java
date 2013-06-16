@@ -2,10 +2,7 @@ package evaluation.demo;
 
 import btrplace.model.Model;
 import btrplace.model.VM;
-import btrplace.model.constraint.Preserve;
-import btrplace.model.constraint.Running;
-import btrplace.model.constraint.SatConstraint;
-import btrplace.model.constraint.Spread;
+import btrplace.model.constraint.*;
 import btrplace.model.view.ModelView;
 import btrplace.model.view.ShareableResource;
 
@@ -18,7 +15,7 @@ import java.util.*;
  * Time: 10:24 PM
  */
 public class Application {
-     private static int index = 0;
+    private int index;
     private ArrayList<VM> tier1;
     private ArrayList<VM> tier2;
     private ArrayList<VM> tier3;
@@ -27,12 +24,15 @@ public class Application {
     private Collection<SatConstraint> checkConstraints;
 
     public Application(Model model) {
+        index = model.getMapping().getAllVMs().size();
         vms = new ArrayList<VM>();
         tier1 = new ArrayList<VM>();
         tier2 = new ArrayList<VM>();
         tier3 = new ArrayList<VM>();
         tiers = new ArrayList<ArrayList<VM>>();
-        boolean b = tiers.addAll(Arrays.asList(tier1, tier2, tier3));
+        tiers.add(tier1);
+        tiers.add(tier2);
+        tiers.add(tier3);
         checkConstraints = new ArrayList<SatConstraint>();
 
         Random random = new Random(System.nanoTime() % 100000);
@@ -67,7 +67,7 @@ public class Application {
         }
     }
 
-    public Collection<SatConstraint> initConstraints(boolean cont) {
+    public Collection<SatConstraint> spread(boolean cont) {
         Collection<SatConstraint> cts = new ArrayList<SatConstraint>();
         for (ArrayList<VM> t : tiers) {
             Spread spread = new Spread(new HashSet<VM>(t), cont);
@@ -77,6 +77,25 @@ public class Application {
             cts.add(run);
         }
         return cts;
+    }
+
+    public Collection<SatConstraint> gather(boolean cont) {
+        Collection<SatConstraint> gathers = new ArrayList<SatConstraint>();
+        for (ArrayList<VM> t : tiers) {
+            Running run = new Running(t);
+            gathers.add(run);
+        }
+        for (int i = 0; i < 1; i++) {
+            Collection<VM> gVM = new ArrayList<VM>();
+            gVM.add(tier1.get(i));
+            gVM.add(tier2.get(i));
+            gVM.add(tier3.get(i));
+            Gather gather = new Gather(gVM, cont);
+            checkConstraints.add(gather);
+            gathers.add(gather);
+        }
+        return gathers;
+
     }
 
     public Collection<SatConstraint> getCheckConstraints() {
@@ -92,13 +111,13 @@ public class Application {
 
     public Collection<SatConstraint> loadSpike(int percent) {
         Collection<SatConstraint> constraints = new ArrayList<SatConstraint>();
-//        constraints.add(new Preserve(tier2, "cpu", 4));
-        int size = tier3.size() * percent / 100;
+        int size = tier2.size() * percent / 100;
         ArrayList<VM> tmp = new ArrayList<VM>();
         for (int i = 0; i < size; i++) {
-            tmp.add(tier3.get(i));
+            tmp.add(tier2.get(i));
         }
         constraints.add(new Preserve(tmp, "cpu", 4));
+//        constraints.add(new Preserve(tmp, "ram", 17));
         return constraints;
     }
 
