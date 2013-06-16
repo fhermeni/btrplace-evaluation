@@ -4,9 +4,7 @@ import btrplace.model.Mapping;
 import btrplace.model.Model;
 import btrplace.model.Node;
 import btrplace.model.VM;
-import btrplace.model.constraint.Among;
-import btrplace.model.constraint.Running;
-import btrplace.model.constraint.SatConstraint;
+import btrplace.model.constraint.*;
 import btrplace.model.view.ShareableResource;
 import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
@@ -15,6 +13,7 @@ import btrplace.solver.choco.DefaultChocoReconfigurationAlgorithm;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -26,7 +25,7 @@ public abstract class ReconfigurationScenario {
     final static int NUM_CLUSTERS = 16;
     final static int NODES_PER_CLUSTER = 16;
     Model model;
-    boolean restriction = false;
+    boolean restriction;
     EvaluateConstraint eval_constraint;
     ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
     ReconfigurationPlan plan = null;
@@ -35,7 +34,7 @@ public abstract class ReconfigurationScenario {
     public abstract ReconfigurationPlan reconfigure(Collection<Application> apps, int p) throws SolverException;
 
     public void initMap() {
-        ShareableResource cpu = new ShareableResource("cpu", 16, 1);
+        ShareableResource cpu = new ShareableResource("cpu", 64, 4);
         model.attach(cpu);
 //        ShareableResource ram = new ShareableResource("ram", 128, 1);
 //        model.attach(ram);
@@ -46,51 +45,53 @@ public abstract class ReconfigurationScenario {
                 ns.add(node);
                 model.getMapping().addOnlineNode(node);
             }
-            nss.add(ns);
+            if (j < 4) nss.add(ns);
         }
     }
 
     public Collection<Application> runWithSpread() {
         Collection<Application> totalApps = new ArrayList<Application>();
-        do {
-            Collection<Application> apps = new ArrayList<Application>();
-            Collection<SatConstraint> cstrs = new ArrayList<SatConstraint>();
-            for (int i = 0; i < 240; i++) {
-                Application app = new Application(model);
-                apps.add(app);
-                cstrs.addAll(app.spread(restriction));
-            }
-            try {
+        try {
+            do {
+                Collection<Application> apps = new ArrayList<Application>();
+                Collection<SatConstraint> cstrs = new ArrayList<SatConstraint>();
+                for (int i = 0; i < 20; i++) {
+                    Application app = new Application(model);
+                    apps.add(app);
+                    cstrs.addAll(app.spread(restriction));
+                }
+
                 plan = cra.solve(model, cstrs);
-            } catch (SolverException e) {
-                System.err.println("Run " + e.getMessage());
-            }
-            if (plan != null) model = plan.getResult();
-            else break;
-            totalApps.addAll(apps);
-        } while ((plan != null) && currentLoad() < 70);
+
+                if (plan != null) model = plan.getResult();
+                totalApps.addAll(apps);
+            } while ((plan != null) && currentLoad() < 70);
+        } catch (SolverException e) {
+            System.err.println("Run " + e.getMessage());
+        }
         return totalApps;
     }
 
     public Collection<? extends Application> runWithGather() {
         Collection<Application> totalApps = new ArrayList<Application>();
-        do {
-            Collection<Application> apps = new ArrayList<Application>();
-            Collection<SatConstraint> cstrs = new ArrayList<SatConstraint>();
-            for (int i = 0; i < 20; i++) {
-                Application app = new Application(model);
-                apps.add(app);
-                cstrs.addAll(app.gather(restriction));
-            }
-            try {
+        try {
+            do {
+                Collection<Application> apps = new ArrayList<Application>();
+                Collection<SatConstraint> cstrs = new ArrayList<SatConstraint>();
+                for (int i = 0; i < 20; i++) {
+                    Application app = new Application(model);
+                    apps.add(app);
+                    cstrs.addAll(app.gather(restriction));
+                }
                 plan = cra.solve(model, cstrs);
-            } catch (SolverException e) {
-                System.err.println("Run " +e.getMessage());
-            }
-            if (plan != null) model = plan.getResult();
-            else break;
-            totalApps.addAll(apps);
-        } while ((plan != null) && currentLoad() < 70);
+                if (plan != null) {
+                    model = plan.getResult();
+                    totalApps.addAll(apps);
+                }
+            } while ((plan != null) && currentLoad() < 70);
+        } catch (SolverException e) {
+            System.err.println("Run " + e.getMessage());
+        }
         return totalApps;
     }
 
@@ -104,19 +105,72 @@ public abstract class ReconfigurationScenario {
                     Application app = new Application(model);
                     apps.add(app);
                     Among among = new Among(app.getDatabaseVM(), nss, restriction);
+                    app.setCheckConstraints(Collections.<SatConstraint>singleton(among));
                     Running run = new Running(app.getAllVM());
                     cstrs.add(among);
                     cstrs.add(run);
                 }
                 plan = cra.solve(model, cstrs);
                 if (plan != null) model = plan.getResult();
+
                 totalApps.addAll(apps);
             } while ((plan != null) && currentLoad() < 70);
 
         } catch (SolverException e) {
-            System.err.println("Run " + e.getMessage());
         }
 
+        return totalApps;
+    }
+
+    public Collection<? extends Application> runWithLonely() {
+        Collection<Application> totalApps = new ArrayList<Application>();
+        try {
+            do {
+                Collection<Application> apps = new ArrayList<Application>();
+                Collection<SatConstraint> cstrs = new ArrayList<SatConstraint>();
+                for (int i = 0; i < 20; i++) {
+                    Application app = new Application(model);
+                    apps.add(app);
+                    Running run = new Running(app.getAllVM());
+                    cstrs.add(run);
+                }
+                cstrs.addAll(new Application(model).lonely(restriction));
+                plan = cra.solve(model, cstrs);
+                if (plan != null) model = plan.getResult();
+
+                totalApps.addAll(apps);
+            } while ((plan != null) && currentLoad() < 70);
+
+        } catch (SolverException e) {
+        }
+        return totalApps;
+    }
+
+    public Collection<? extends Application> runWithSReC() {
+        Collection<Application> totalApps = new ArrayList<Application>();
+        try {
+            do {
+                Collection<Application> apps = new ArrayList<Application>();
+                Collection<SatConstraint> cstrs = new ArrayList<SatConstraint>();
+                for (int i = 0; i < 20; i++) {
+                    Application app = new Application(model);
+                    apps.add(app);
+                    Running run = new Running(app.getAllVM());
+                    cstrs.add(run);
+                }
+                SingleResourceCapacity SReC = new SingleResourceCapacity(model.getNodes(), "cpu", 60);
+                Application application = new Application(model);
+                application.setCheckConstraints(SReC);
+                apps.add(application);
+                cstrs.add(SReC);
+                plan = cra.solve(model, cstrs);
+                if (plan != null) model = plan.getResult();
+
+                totalApps.addAll(apps);
+            } while ((plan != null) && currentLoad() < 70);
+
+        } catch (SolverException e) {
+        }
         return totalApps;
     }
 
@@ -131,7 +185,7 @@ public abstract class ReconfigurationScenario {
     }
 
     enum EvaluateConstraint {
-        spread, among, gather
+        spread, among, gather, lonely, SReC
     }
 
 }

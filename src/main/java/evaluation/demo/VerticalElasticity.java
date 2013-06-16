@@ -21,7 +21,7 @@ public class VerticalElasticity extends ReconfigurationScenario implements Runna
 
     public VerticalElasticity(EvaluateConstraint constraint) {
         model = new DefaultModel();
-        restriction = false;
+        restriction = true;
         eval_constraint = constraint;
         nss = new ArrayList<Collection<Node>>();
         cra.setTimeLimit(30);
@@ -41,12 +41,18 @@ public class VerticalElasticity extends ReconfigurationScenario implements Runna
             case gather:
                 appList.addAll(runWithGather());
                 break;
+            case lonely:
+                appList.addAll(runWithLonely());
+                break;
+            case SReC:
+                appList.addAll(runWithSReC());
+                break;
         }
 
 
         int count = 0;
         boolean satisfied = true;
-        int p = 20;
+        int p = 10;
         try {
             do {
                 count++;
@@ -54,7 +60,6 @@ public class VerticalElasticity extends ReconfigurationScenario implements Runna
                 if (pl == null) {
                     break;
                 }
-                p += 5;
                 for (Application app : appList) {
                     for (SatConstraint s : app.getCheckConstraints()) {
                         boolean continuous = s.isContinuous();
@@ -68,6 +73,7 @@ public class VerticalElasticity extends ReconfigurationScenario implements Runna
                     }
                     if (!satisfied) break;
                 }
+                p += 5;
             } while (satisfied && p < 100);
         } finally {
             System.out.printf("%s\t%d\t%d\t%d\t%d\n",eval_constraint, appList.size(), currentLoad(), p, count);
@@ -82,7 +88,7 @@ public class VerticalElasticity extends ReconfigurationScenario implements Runna
         int i = 0;
         for (Application a : apps) {
             cstrs.addAll(a.getCheckConstraints());
-            if (i++ % 2 == 0) continue;
+            if (i++ % 4 == 0) continue;
             cstrs.addAll(a.loadSpike(p));
         }
         ReconfigurationPlan plan = null;

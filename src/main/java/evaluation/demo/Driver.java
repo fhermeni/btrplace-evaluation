@@ -25,7 +25,10 @@ public class Driver {
         thread.execute(among);
         VerticalElasticity gather = new VerticalElasticity(ReconfigurationScenario.EvaluateConstraint.gather);
         thread.execute(gather);
-
+        VerticalElasticity lonely = new VerticalElasticity(ReconfigurationScenario.EvaluateConstraint.lonely);
+        thread.execute(lonely);
+        VerticalElasticity SReC = new VerticalElasticity(ReconfigurationScenario.EvaluateConstraint.SReC);
+        thread.execute(SReC);
         thread.shutdown();
 
     }

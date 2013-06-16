@@ -3,8 +3,6 @@ package evaluation.demo;
 import btrplace.model.Model;
 import btrplace.model.VM;
 import btrplace.model.constraint.*;
-import btrplace.model.view.ModelView;
-import btrplace.model.view.ShareableResource;
 
 import java.util.*;
 
@@ -53,6 +51,7 @@ public class Application {
                         VM vm = model.newVM(index++);
                         model.getMapping().addReadyVM(vm);
                         tiers.get(i).add(vm);
+                        vms.add(vm);
                     }
                     break;
 
@@ -61,6 +60,7 @@ public class Application {
                         VM vm = model.newVM(index++);
                         model.getMapping().addReadyVM(vm);
                         tiers.get(i).add(vm);
+                        vms.add(vm);
                     }
             }
 
@@ -95,7 +95,22 @@ public class Application {
             gathers.add(gather);
         }
         return gathers;
+    }
 
+    public Collection<SatConstraint> lonely(boolean cont) {
+        Collection<SatConstraint> constraints = new ArrayList<SatConstraint>();
+        Running run = new Running(vms);
+        constraints.add(run);
+        Lonely lonely = new Lonely(new HashSet<VM>(vms), cont);
+        checkConstraints.add(lonely);
+        return constraints;
+    }
+    public void setCheckConstraints(SatConstraint checkConstraints) {
+        this.checkConstraints = Collections.singleton(checkConstraints);
+    }
+
+    public void setCheckConstraints(Collection<SatConstraint> checkConstraints) {
+        this.checkConstraints = checkConstraints;
     }
 
     public Collection<SatConstraint> getCheckConstraints() {
@@ -116,7 +131,7 @@ public class Application {
         for (int i = 0; i < size; i++) {
             tmp.add(tier2.get(i));
         }
-        constraints.add(new Preserve(tmp, "cpu", 4));
+        constraints.add(new Preserve(tmp, "cpu", 16));
 //        constraints.add(new Preserve(tmp, "ram", 17));
         return constraints;
     }
