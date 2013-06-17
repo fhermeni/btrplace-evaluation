@@ -1,13 +1,7 @@
 package evaluation.generator;
 
-import btrplace.model.DefaultModel;
-import btrplace.model.Model;
-import btrplace.model.Node;
-import btrplace.model.VM;
-import btrplace.model.constraint.Preserve;
-import btrplace.model.constraint.Running;
-import btrplace.model.constraint.SatConstraint;
-import btrplace.model.constraint.Spread;
+import btrplace.model.*;
+import btrplace.model.constraint.*;
 import btrplace.model.view.ShareableResource;
 import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
@@ -104,5 +98,37 @@ public class TestBtrPlace {
         ReconfigurationPlan plan = cra.solve(model, ctr);
         model = plan.getResult();
         System.out.println(model);
+    }
+
+    @Test
+    public void testOverbook() throws SolverException {
+        Model model = new DefaultModel();
+        ShareableResource cpu = new ShareableResource("cpu", 8, 1);
+        model.attach(cpu);
+        model.getMapping().addOnlineNode(model.newNode());
+        model.getMapping().addOnlineNode(model.newNode());
+
+        Collection<VM> vms = new ArrayList<VM>();
+        for (int i = 0; i < 64; i++) {
+            VM e = model.newVM();
+            vms.add(e);
+            model.getMapping().addReadyVM(e);
+        }
+        Running run = new Running(vms);
+        Overbook overbook = new Overbook(model.getNodes(), "cpu", 4);
+        Collection<SatConstraint> VMconstraints = new ArrayList<SatConstraint>();
+        VMconstraints.add(overbook);
+        VMconstraints.add(run);
+        ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
+        ReconfigurationPlan plan = cra.solve(model, VMconstraints);
+        Assert.assertNotNull(plan);
+        System.out.println(plan.getResult().getMapping());
+        Mapping mapping = plan.getResult().getMapping();
+        Set<Node> onlineNodes = mapping.getOnlineNodes();
+        Set<VM> runningVMs = mapping.getRunningVMs();
+        ShareableResource sr = (ShareableResource) model.getView("ShareableResource.cpu");
+        double capacity = sr.sumCapacities(onlineNodes, true) * overbook.getRatio();
+        double used = sr.sumConsumptions(runningVMs, true);
+        System.out.printf("%f %f %f", capacity, used, used / capacity * 100);
     }
 }

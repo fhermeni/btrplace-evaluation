@@ -4,7 +4,10 @@ import btrplace.model.Model;
 import btrplace.model.VM;
 import btrplace.model.constraint.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Random;
 
 /**
  * Created with IntelliJ IDEA.
@@ -19,7 +22,7 @@ public class Application {
     private ArrayList<VM> tier3;
     private ArrayList<VM> vms;
     private ArrayList<ArrayList<VM>> tiers;
-    private Collection<SatConstraint> checkConstraints;
+    private Collection<SatConstraint> validateConstraints;
 
     public Application(Model model) {
         index = model.getMapping().getAllVMs().size();
@@ -31,7 +34,7 @@ public class Application {
         tiers.add(tier1);
         tiers.add(tier2);
         tiers.add(tier3);
-        checkConstraints = new ArrayList<SatConstraint>();
+        validateConstraints = new ArrayList<SatConstraint>();
 
         Random random = new Random(System.nanoTime() % 100000);
         for (int i = 0; i < 3; i++) {
@@ -68,54 +71,33 @@ public class Application {
     }
 
     public Collection<SatConstraint> spread(boolean cont) {
-        Collection<SatConstraint> cts = new ArrayList<SatConstraint>();
+        Collection<SatConstraint> spreads = new ArrayList<SatConstraint>(3);
         for (ArrayList<VM> t : tiers) {
             Spread spread = new Spread(new HashSet<VM>(t), cont);
-            Running run = new Running(t);
-            cts.add(spread);
-            checkConstraints.add(spread);
-            cts.add(run);
+            spreads.add(spread);
         }
-        return cts;
+        validateConstraints.addAll(spreads);
+        return spreads;
     }
 
     public Collection<SatConstraint> gather(boolean cont) {
-        Collection<SatConstraint> gathers = new ArrayList<SatConstraint>();
-        for (ArrayList<VM> t : tiers) {
-            Running run = new Running(t);
-            gathers.add(run);
-        }
+        Collection<SatConstraint> gathers = new ArrayList<SatConstraint>(2);
         for (int i = 0; i < 1; i++) {
             Collection<VM> gVM = new ArrayList<VM>();
             gVM.add(tier1.get(i));
             gVM.add(tier2.get(i));
             gVM.add(tier3.get(i));
             Gather gather = new Gather(gVM, cont);
-            checkConstraints.add(gather);
             gathers.add(gather);
         }
+        validateConstraints.addAll(gathers);
         return gathers;
     }
 
-    public Collection<SatConstraint> lonely(boolean cont) {
-        Collection<SatConstraint> constraints = new ArrayList<SatConstraint>();
-        Running run = new Running(vms);
-        constraints.add(run);
-        Lonely lonely = new Lonely(new HashSet<VM>(vms), cont);
-        checkConstraints.add(lonely);
-        return constraints;
-    }
-    public void setCheckConstraints(SatConstraint checkConstraints) {
-        this.checkConstraints = Collections.singleton(checkConstraints);
+    public SatConstraint lonely(boolean cont) {
+        return new Lonely(new HashSet<VM>(vms), cont);
     }
 
-    public void setCheckConstraints(Collection<SatConstraint> checkConstraints) {
-        this.checkConstraints = checkConstraints;
-    }
-
-    public Collection<SatConstraint> getCheckConstraints() {
-        return checkConstraints;
-    }
 
     @Override
     public String toString() {
@@ -124,15 +106,11 @@ public class Application {
         return sb.toString();
     }
 
-    public Collection<SatConstraint> loadSpike(int percent) {
+    public Collection<SatConstraint> loadSpike() {
         Collection<SatConstraint> constraints = new ArrayList<SatConstraint>();
-        int size = tier2.size() * percent / 100;
-        ArrayList<VM> tmp = new ArrayList<VM>();
-        for (int i = 0; i < size; i++) {
-            tmp.add(tier2.get(i));
-        }
-        constraints.add(new Preserve(tmp, "cpu", 16));
-//        constraints.add(new Preserve(tmp, "ram", 17));
+        constraints.add(new Preserve(tier2, "cpu", 8));
+        constraints.add(new Preserve(tier2, "ram", 7));
+//        System.out.printf("size: %d\t%s\n", size, tmp);
         return constraints;
     }
 

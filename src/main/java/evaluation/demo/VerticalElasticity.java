@@ -2,15 +2,13 @@ package evaluation.demo;
 
 import btrplace.model.DefaultModel;
 import btrplace.model.Node;
-import btrplace.model.constraint.Among;
 import btrplace.model.constraint.SatConstraint;
-import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
-import btrplace.solver.choco.ChocoReconfigurationAlgorithm;
-import btrplace.solver.choco.DefaultChocoReconfigurationAlgorithm;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
 
 /**
  * User: Tu Huynh Dang
@@ -19,84 +17,88 @@ import java.util.Collection;
  */
 public class VerticalElasticity extends ReconfigurationScenario implements Runnable {
 
+    private int PERCENT_APPS_INC = 5;
+
     public VerticalElasticity(EvaluateConstraint constraint) {
         model = new DefaultModel();
         restriction = true;
-        eval_constraint = constraint;
-        nss = new ArrayList<Collection<Node>>();
-        cra.setTimeLimit(30);
+        CType = constraint;
+        groups = new ArrayList<Collection<Node>>();
+        validateConstraint = new ArrayList<SatConstraint>();
+        appList = new ArrayList<Application>();
+//        overbook = new Overbook(model.getNodes(), "cpu", 4);
+
     }
 
     public void run() {
         initMap();
-        Collection<Application> appList = new ArrayList<Application>();
-
-        switch (eval_constraint) {
+        boolean evaluate = true;
+        switch (CType) {
             case spread:
-                appList.addAll(runWithSpread());
+                runWithSpread();
                 break;
             case among:
-                appList.addAll(runWithAmong());
+                runWithAmong();
                 break;
             case gather:
-                appList.addAll(runWithGather());
+                runWithGather();
                 break;
             case lonely:
-                appList.addAll(runWithLonely());
+                runWithLonely();
                 break;
-            case SReC:
-                appList.addAll(runWithSReC());
-                break;
+            case mixed:
+                evaluate = runMix();
         }
-
-
-        int count = 0;
-        boolean satisfied = true;
-        int p = 10;
-        try {
-            do {
-                count++;
-                ReconfigurationPlan pl = reconfigure(appList, p);
-                if (pl == null) {
-                    break;
-                }
-                for (Application app : appList) {
-                    for (SatConstraint s : app.getCheckConstraints()) {
-                        boolean continuous = s.isContinuous();
-                        if (!continuous) s.setContinuous(true);
-                        if (!s.isSatisfied(pl)) {
-                            satisfied = false;
-//                            System.err.println("Does not satisfy " + s);
-                            break;
-                        }
-                        s.setContinuous(continuous);
-                    }
-                    if (!satisfied) break;
-                }
-                p += 5;
-            } while (satisfied && p < 100);
-        } finally {
-            System.out.printf("%s\t%d\t%d\t%d\t%d\n",eval_constraint, appList.size(), currentLoad(), p, count);
+        if (evaluate) {
+            int count = 0;
+            int p = 30;
+            try {
+                do {
+                    if (!reconfigure(p)) break;
+                    count++;
+                    p += 5;
+                } while (p < 100);
+            } finally {
+                System.out.printf("%s\t%d\t%d\t%d\t%d\n", CType, appList.size(), currentLoad(), p, count);
+            }
         }
     }
 
 
-
-    public ReconfigurationPlan reconfigure(Collection<Application> apps, int p) {
-        cra.setTimeLimit(30);
+    public boolean reconfigure(int p) {
+        boolean satisfied = true;
         Collection<SatConstraint> cstrs = new ArrayList<SatConstraint>();
-        int i = 0;
-        for (Application a : apps) {
-            cstrs.addAll(a.getCheckConstraints());
-            if (i++ % 4 == 0) continue;
-            cstrs.addAll(a.loadSpike(p));
+        int n_apps = appList.size() * PERCENT_APPS_INC / 100;
+        cstrs.addAll(validateConstraint);
+        Collections.shuffle(appList);
+        Iterator<Application> iterator = appList.iterator();
+        while (iterator.hasNext() && (n_apps-- > 0)) {
+            Application a = iterator.next();
+            cstrs.addAll(a.loadSpike());
         }
-        ReconfigurationPlan plan = null;
+        /*for (SatConstraint s : validateConstraint) {
+            System.out.println(s);
+        }*/
         try {
             plan = cra.solve(model, cstrs);
+            if (plan == null) {
+                System.out.println(cra.getSolvingStatistics());
+                return false;
+            } else {
+                for (SatConstraint s : validateConstraint) {
+                    boolean continuous = s.isContinuous();
+                    if (!continuous) s.setContinuous(true);
+                    if (!s.isSatisfied(plan)) {
+                        satisfied = false;
+                        System.err.println("Does not satisfy " + s);
+                    }
+                    s.setContinuous(continuous);
+                }
+            }
         } catch (SolverException e) {
             System.err.println("Reconfig: " + e.getMessage());
         }
-        return plan;
+
+        return satisfied;
     }
 }
