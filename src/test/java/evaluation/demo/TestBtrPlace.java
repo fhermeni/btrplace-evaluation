@@ -1,4 +1,4 @@
-package evaluation.generator;
+package evaluation.demo;
 
 import btrplace.model.*;
 import btrplace.model.constraint.*;

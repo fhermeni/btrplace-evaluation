@@ -2,6 +2,7 @@ package evaluation.generator;
 
 import btrplace.json.JSONConverterException;
 import btrplace.json.model.ModelConverter;
+import btrplace.json.model.constraint.MaxOnlinesConverter;
 import btrplace.json.model.constraint.SatConstraintsConverter;
 import btrplace.json.plan.ReconfigurationPlanConverter;
 import btrplace.model.Model;
@@ -25,6 +26,7 @@ public class ConverterTools {
     public static void constraintsToFile(Collection<SatConstraint> constraints, String constraint_name) {
         SatConstraintsConverter converter = new SatConstraintsConverter();
         try {
+            converter.register(new MaxOnlinesConverter());
             converter.toJSON(constraints, new File(constraint_name + "Constraint.json"));
 
         } catch (JSONConverterException e) {
@@ -37,7 +39,9 @@ public class ConverterTools {
     }
 
     public static Set<SatConstraint> getConstraints(Model model, Collection<String> constraint_files) {
+
         SatConstraintsConverter satConstraintsConverter = new SatConstraintsConverter();
+        satConstraintsConverter.register(new MaxOnlinesConverter());
         Set<SatConstraint> ctrs = new HashSet<SatConstraint>();
         try {
             for (String s : constraint_files) {

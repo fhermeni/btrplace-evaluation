@@ -4,11 +4,10 @@ import btrplace.model.DefaultModel;
 import btrplace.model.Node;
 import btrplace.model.constraint.SatConstraint;
 import btrplace.solver.SolverException;
+import evaluation.generator.ConverterTools;
+import evaluation.generator.EvaluationTools;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
+import java.util.*;
 
 /**
  * User: Tu Huynh Dang
@@ -21,7 +20,7 @@ public class VerticalElasticity extends ReconfigurationScenario implements Runna
 
     public VerticalElasticity(EvaluateConstraint constraint) {
         model = new DefaultModel();
-        restriction = true;
+        restriction = false;
         CType = constraint;
         groups = new ArrayList<Collection<Node>>();
         validateConstraint = new ArrayList<SatConstraint>();
@@ -50,6 +49,9 @@ public class VerticalElasticity extends ReconfigurationScenario implements Runna
                 evaluate = runMix();
         }
         if (evaluate) {
+            long id = Thread.currentThread().getId();
+            ConverterTools.modelToFile(model, "model" + id + ".json");
+            ConverterTools.constraintsToFile(validateConstraint, "N" + id);
             int count = 0;
             int p = 30;
             try {
@@ -66,6 +68,7 @@ public class VerticalElasticity extends ReconfigurationScenario implements Runna
 
 
     public boolean reconfigure(int p) {
+        cra.setTimeLimit(30);
         boolean satisfied = true;
         Collection<SatConstraint> cstrs = new ArrayList<SatConstraint>();
         int n_apps = appList.size() * PERCENT_APPS_INC / 100;

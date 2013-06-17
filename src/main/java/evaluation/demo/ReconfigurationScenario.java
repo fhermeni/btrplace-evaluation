@@ -10,6 +10,8 @@ import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
 import btrplace.solver.choco.ChocoReconfigurationAlgorithm;
 import btrplace.solver.choco.DefaultChocoReconfigurationAlgorithm;
+import btrplace.solver.choco.constraint.CMaxOnlines;
+import btrplace.solver.choco.constraint.ChocoSatConstraintBuilder;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -172,6 +174,7 @@ public abstract class ReconfigurationScenario {
     }
 
     public boolean runMix() {
+        cra.getSatConstraintMapper().register(new CMaxOnlines.Builder());
         Collection<SatConstraint> cstrs = new ArrayList<SatConstraint>();
 //        cstrs.add(overbook);
         try {
@@ -186,8 +189,10 @@ public abstract class ReconfigurationScenario {
 //                validateConstraint.add(among);
             }
 //            runOneALonelyApplication(cstrs);
-            SingleResourceCapacity SReC = new SingleResourceCapacity(model.getNodes(), "cpu", 30);
-            SingleResourceCapacity SReC2 = new SingleResourceCapacity(model.getNodes(), "ram", 120);
+            SingleResourceCapacity SReC = new SingleResourceCapacity(model.getNodes(), "cpu", 30, restriction);
+            SingleResourceCapacity SReC2 = new SingleResourceCapacity(model.getNodes(), "ram", 120, restriction);
+            MaxOnline maxOnline = new MaxOnline(model.getNodes(), 250, restriction);
+            validateConstraint.add(maxOnline);
             validateConstraint.add(SReC);
             validateConstraint.add(SReC2);
             cstrs.addAll(validateConstraint);

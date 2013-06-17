@@ -12,17 +12,21 @@ public class Driver {
 
     public static void main(String[] args) {
         ExecutorService thread = Executors.newFixedThreadPool(4);
+
+/*
         int nP = 8;
 
         for (int i = 0; i < nP; i++) {
             VerticalElasticity mix = new VerticalElasticity(ReconfigurationScenario.EvaluateConstraint.mixed);
             thread.execute(mix);
         }
+*/
 
-          /*
+
         VerticalElasticity mix = new VerticalElasticity(ReconfigurationScenario.EvaluateConstraint.mixed);
         thread.execute(mix);
-       VerticalElasticity spread = new VerticalElasticity(ReconfigurationScenario.EvaluateConstraint.spread);
+        /*
+        VerticalElasticity spread = new VerticalElasticity(ReconfigurationScenario.EvaluateConstraint.spread);
         thread.execute(spread);
         VerticalElasticity among = new VerticalElasticity(ReconfigurationScenario.EvaluateConstraint.among);
         thread.execute(among);
