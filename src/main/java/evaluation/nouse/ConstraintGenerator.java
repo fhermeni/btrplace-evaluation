@@ -1,4 +1,4 @@
-package evaluation.demo;
+package evaluation.nouse;
 
 import btrplace.model.Model;
 import btrplace.model.Node;

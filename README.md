@@ -8,77 +8,53 @@ to the hardware failures or increasing in the workload of VMs.
 
 
 #Evaluation Protocol
-To evaluation Btrplace, We use the specification of the [Open Cirrus Cloud Computing Testbed](http://opencirrus.org)
-and the [Open Cloud Testbed](http://opencloudconsortium.org). Relying on the detail specification of Open  Cirrus, we
-simulate the datacenters as follow:
-**Open Cirrus** is a federated heterogeneous distributed data centers. It consists of several different geographic
-sites, each has 1000+ cores. Below is the data from
-[Open Cirrus: A global cloud computing testbed](http://www.cs.cmu.edu/~droh/papers/opencirrus-ieeecomputer.pdf)
+To evaluation Btrplace, We use the specification of the [Dell Active System 50](http://www.dell.com/us/business/p/dell-vstart-50/pd), a pre-built managed converged system for small datacenter. The work-node specification details are listed below.
+Dell PowerEdge R620 Server: 2S/1U, 8 cores/socket, 2 threads / core.  64GB of memory.   
+Storage: Local Hard Drive: 300GB. Storage array: 7.2TB  
+**Server Summary**
 <table>
   <tr>
-    <th>Site</th>
+    <th>#Socket</th>
     <th>#Cores</th>
-    <th>#Servers</th>
-    <th>Disk Size</th>
-  </tr>
-  <tr>
-    <td>HP</td>
-    <td>1024</td>
-    <td>256</td>
-    <td>3.3TB</td>
-  </tr>
-  <tr>
-    <td>IDA</td>
-    <td>2400</td>
-    <td>300</td>
-    <td>4.8TB</td>
-  </tr>
-  <tr>
-    <td>Intel</td>
-    <td>1364</td>
-    <td>198</td>
-    <td>1.77TB</td>
-  </tr>
-  <tr>
-    <td>KIT</td>
-    <td>2656</td>
-    <td>232</td>
-    <td>10TB</td>
-  </tr>
-  <tr>
-    <td>UIUC</td>
-    <td>1024</td>
-    <td>128</td>
-    <td>2TB</td>
-  </tr>
-  <tr>
-    <td>Yahoo</td>
-    <td>3200</td>
-    <td>480</td>
-    <td>2.4TB</td>
-  </tr>
-</table>
-
-**Open Cloud Testbed** has 120 commondity nodes in four data centers which are connected with a high performance
-10Gb/s network. The specification of each node is shown below:
-<table>
-  <tr>
-    <th>#Cores</th>
+    <th>#Threads</th>
     <th>RAM</th>
     <th>Disk Size</th>
   </tr>
   <tr>
-    <td>4</td>
-    <td>12GB</td>
-    <td>1TB</td>
+    <td>2</td>
+  <td>16</td>
+	<td>32</td>
+    <td>64GB</td>
+    <td>320GB</td>
 </table>
 
-In each model, we run many n-tiers applications that have multiple replicas for each tier to ensure high availability,
-fault tolerance and high performance properties. For instance, a 3-tier application has 4 VMs for the Presentation Layer,
-8 VMs for Business Logic and Data Layers.
+**Datacenter configuration**   
+A medium datacenter, e.g [Open Cloud Testbed](http://opencloudconsortium.org), consists of 120 working nodes racked in 4 racks each mounted 30 nodes. 
+In this datacenter, we run many n-tiers applications that have multiple replicas for each tier to ensure high availability,
+fault tolerance and high performance properties. For instance, a 3-tier application has 2 VMs for the Presentation Layer,
+4 VMs for Business Logic and Data Layers.
 
-Then we simulate the increasing load of the applications by preserving more CPU/RAM for some arbitrary VMs until it
-causes the consolidation happens. We record the reconfiguration plans computed by BtrPlace both for discrete restriction
+
+**Datacenter consolidation scenarios**  
+
+1. Vertical Scaling  
+We simulate the increasing load of the applications by preserving more CPU/RAM for some arbitrary VMs until it
+causes the consolidation happens. 
+
+2. Horizontal Scaling  
+Application's workload increases, more VMs needed for each tier to handle the increasing load. The set of constraints of the application then include
+the cloned VMs. 
+
+3. Hardware Failure / Network Maintenance  
+The average rate of hardware failure in a datacenter is around 5% at any given moment. The network maintenance operation also brings down some nodes.
+We simulate this event by turning off random nodes in the datacenter. 
+
+4. BootStorm VM  
+There are some moments during a working day, hundreds of VMs are powered on / off simultaneously (the beginning and the end of a working day). It may
+affect the performance of the applications. The consolidation manager need to reconfigure the datacenter for load balancing and satisfaction of SLAs.
+
+**Evaluation**
+In each scenario, we record the reconfiguration plans computed by BtrPlace both for discrete restriction
 and continuous restriction of the constraints. After that, we compare the time needed to compute the plans, and to
 complete the reconfiguration process. Additionally, we compare the number of actions and the dependency between the action
 specified in the plans.
@@ -92,10 +68,10 @@ The evaluation contain:
 
 **MCGenerator:**  Generates a model and a constraint associates with the model. One can specify the number of nodes and
  VMs in the model. Furthermore, for some constraints need a set of VM or a set of Node, this can be done by passing
- numbers in command's parameters.
+ numbers in command parameters.
 
 **Benchmark:** fixes the model if it doesn't satisfy the constraint, then the benchmark creates the increase in workload
- of VM by add the Preserve constraints on the set of VMs invloved in the tested constraints.
+ of VM by add the Preserve constraints on the set of VMs involved in the tested constraints.
 
 **PlanChecker:** Use to check whether the plan computed in the discrete satisfaction of the constraints satisfies their
 continuous satisfaction.

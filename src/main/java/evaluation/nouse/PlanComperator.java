@@ -1,4 +1,4 @@
-package evaluation.demo;
+package evaluation.nouse;
 
 import btrplace.json.JSONConverterException;
 import btrplace.json.plan.ReconfigurationPlanConverter;
