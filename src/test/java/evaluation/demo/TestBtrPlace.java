@@ -131,4 +131,55 @@ public class TestBtrPlace {
         double used = sr.sumConsumptions(runningVMs, true);
         System.out.printf("%f %f %f", capacity, used, used / capacity * 100);
     }
+
+    @Test
+    public void testLonely() throws SolverException {
+        Model model = new DefaultModel();
+
+        ShareableResource cpu = new ShareableResource("cpu", 8, 1);
+        ShareableResource ram = new ShareableResource("ram", 32, 1);
+        Overbook overcpu = new Overbook(model.getNodes(), "cpu", 4);
+        Overbook overram = new Overbook(model.getNodes(), "ram", 4);
+//        ShareableResource cpu = new ShareableResource("cpu", 32, 1);
+//        ShareableResource ram = new ShareableResource("ram", 128, 1);
+        model.attach(cpu);
+        model.attach(ram);
+        for (int i = 0; i < 8; i++) {
+            Node n = model.newNode();
+            model.getMapping().addOnlineNode(n);
+        }
+        for (int i = 0; i < 4; i++) {
+            VM vm = model.newVM();
+            model.getMapping().addReadyVM(vm);
+        }
+        HashSet<VM> vms = new HashSet<VM>();
+        for (int i = 0; i < 18; i++) {
+            VM vm = model.newVM();
+            vms.add(vm);
+            model.getMapping().addReadyVM(vm);
+        }
+        Set<VM> allVMs = model.getMapping().getAllVMs();
+        Lonely lonely = new Lonely(vms);
+        Running run = new Running(allVMs);
+        SingleResourceCapacity srec = new SingleResourceCapacity(model.getNodes(), "cpu", 30);
+        ArrayList<SatConstraint> constraints = new ArrayList<SatConstraint>();
+
+        constraints.addAll(Arrays.asList(lonely, run, srec, overcpu, overram));
+//        constraints.addAll(Arrays.asList(lonely, run, srec));
+        ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
+        cra.setTimeLimit(30);
+        ReconfigurationPlan solve = cra.solve(model, constraints);
+        Assert.assertNotNull(solve);
+        System.out.println(solve.getResult().getMapping());
+        constraints.remove(run);
+        constraints.add(new Preserve(vms, "cpu", 8));
+        constraints.add(new Preserve(vms, "ram", 7));
+        for (SatConstraint s : constraints) {
+            System.out.println(s);
+        }
+        ReconfigurationPlan plan = cra.solve(solve.getResult(), constraints);
+        Assert.assertNotNull(plan);
+        System.out.println(plan.getResult().getMapping());
+        System.out.println(plan);
+    }
 }

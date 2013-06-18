@@ -2,8 +2,12 @@ package evaluation.demo;
 
 import btrplace.model.Model;
 import btrplace.model.VM;
-import btrplace.model.constraint.*;
+import btrplace.model.constraint.Gather;
+import btrplace.model.constraint.Lonely;
+import btrplace.model.constraint.SatConstraint;
+import btrplace.model.constraint.Spread;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -15,7 +19,7 @@ import java.util.Random;
  * Date: 6/11/13
  * Time: 10:24 PM
  */
-public class Application {
+public class Application implements Serializable, Cloneable {
     private int index;
     private ArrayList<VM> tier1;
     private ArrayList<VM> tier2;
@@ -106,13 +110,6 @@ public class Application {
         return sb.toString();
     }
 
-    public Collection<SatConstraint> loadSpike() {
-        Collection<SatConstraint> constraints = new ArrayList<SatConstraint>();
-        constraints.add(new Preserve(tier2, "cpu", 8));
-        constraints.add(new Preserve(tier2, "ram", 7));
-//        System.out.printf("size: %d\t%s\n", size, tmp);
-        return constraints;
-    }
 
     public Collection<VM> getAllVM() {
         return vms;
@@ -120,5 +117,9 @@ public class Application {
 
     public Collection<VM> getDatabaseVM() {
         return tier3;
+    }
+
+    public ArrayList<VM> getTier2() {
+        return tier2;
     }
 }

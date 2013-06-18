@@ -1,91 +1,67 @@
 package evaluation.demo;
 
-import btrplace.model.DefaultModel;
-import btrplace.model.Node;
-import btrplace.model.constraint.SatConstraint;
+import btrplace.model.VM;
+import btrplace.model.constraint.*;
+import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
-import evaluation.generator.ConverterTools;
-import evaluation.generator.EvaluationTools;
 
 import java.util.*;
 
 /**
- * User: Tu Huynh Dang
- * Date: 6/11/13
- * Time: 10:14 PM
+ * User: TU HUYNH DANG
+ * Date: 6/18/13
+ * Time: 11:34 AM
  */
 public class VerticalElasticity extends ReconfigurationScenario implements Runnable {
 
-    private int PERCENT_APPS_INC = 5;
+    StringBuilder sb;
 
-    public VerticalElasticity(EvaluateConstraint constraint) {
-        model = new DefaultModel();
-        restriction = false;
-        CType = constraint;
-        groups = new ArrayList<Collection<Node>>();
+    public VerticalElasticity(int id) {
+        modelId = id;
         validateConstraint = new ArrayList<SatConstraint>();
-        appList = new ArrayList<Application>();
-//        overbook = new Overbook(model.getNodes(), "cpu", 4);
-
+        sb = new StringBuilder();
+        cra.setTimeLimit(60);
     }
 
+
+    @Override
     public void run() {
-        initMap();
-        boolean evaluate = true;
-        switch (CType) {
-            case spread:
-                runWithSpread();
-                break;
-            case among:
-                runWithAmong();
-                break;
-            case gather:
-                runWithGather();
-                break;
-            case lonely:
-                runWithLonely();
-                break;
-            case mixed:
-                evaluate = runMix();
-        }
-        if (evaluate) {
-            long id = Thread.currentThread().getId();
-            ConverterTools.modelToFile(model, "model" + id + ".json");
-            ConverterTools.constraintsToFile(validateConstraint, "N" + id);
-            int count = 0;
-            int p = 30;
-            try {
-                do {
-                    if (!reconfigure(p)) break;
-                    count++;
-                    p += 5;
-                } while (p < 100);
-            } finally {
-                System.out.printf("%s\t%d\t%d\t%d\t%d\n", CType, appList.size(), currentLoad(), p, count);
-            }
-        }
+        int p = 5;
+        boolean c;
+
+        readData(modelId);
+
+        do {
+            c = discrete(p);
+            if (!c) break;
+            p += 5;
+        } while (c && p < 100);
+        tryContinuous(p);
+        System.out.println(sb.toString());
     }
 
-
-    public boolean reconfigure(int p) {
-        cra.setTimeLimit(30);
+    @Override
+    public boolean discrete(int p) {
+        int[] vioTime = new int[4];
         boolean satisfied = true;
         Collection<SatConstraint> cstrs = new ArrayList<SatConstraint>();
-        int n_apps = appList.size() * PERCENT_APPS_INC / 100;
-        cstrs.addAll(validateConstraint);
-        Collections.shuffle(appList);
-        Iterator<Application> iterator = appList.iterator();
-        while (iterator.hasNext() && (n_apps-- > 0)) {
-            Application a = iterator.next();
-            cstrs.addAll(a.loadSpike());
+        ReconfigurationPlan plan;
+        int size = model.getMapping().getAllVMs().size() * p / 100;
+        List<VM> vms = new ArrayList<VM>(model.getMapping().getAllVMs());
+        Collections.shuffle(vms);
+        Iterator<VM> iterator = vms.iterator();
+        Collection<VM> vmSpike = new ArrayList<VM>();
+        while (iterator.hasNext() && size > 0) {
+            vmSpike.add(iterator.next());
+            size--;
         }
-        /*for (SatConstraint s : validateConstraint) {
-            System.out.println(s);
-        }*/
+        cstrs.add(new Preserve(vmSpike, "cpu", 2));
+        cstrs.add(new Preserve(vmSpike, "ram", 3));
+        cstrs.addAll(validateConstraint);
         try {
             plan = cra.solve(model, cstrs);
             if (plan == null) {
-                System.out.println(cra.getSolvingStatistics());
+                sb.append(String.format("Model %2d. %d Discrete No solution\n", modelId, p));
                 return false;
             } else {
                 for (SatConstraint s : validateConstraint) {
@@ -93,15 +69,82 @@ public class VerticalElasticity extends ReconfigurationScenario implements Runna
                     if (!continuous) s.setContinuous(true);
                     if (!s.isSatisfied(plan)) {
                         satisfied = false;
-                        System.err.println("Does not satisfy " + s);
+                        if (s instanceof Spread) {
+                            vioTime[0]++;
+                        } else if (s instanceof Among) {
+                            vioTime[1]++;
+                        } else if (s instanceof SingleResourceCapacity) {
+                            vioTime[2]++;
+                        } else if (s instanceof MaxOnline) {
+                            vioTime[3]++;
+                        }
+//                        System.err.println("Does not satisfy continuous restriction");
                     }
                     s.setContinuous(continuous);
                 }
             }
         } catch (SolverException e) {
-            System.err.println("Reconfig: " + e.getMessage());
+            sb.append(String.format("Model %2d. Discrete: %s\n", modelId, e.getMessage()));
+            return false;
         }
-
+        sb.append(String.format("%2d\t%2d\t%2d\t%3d\t%d\t%d\tD\n", modelId, p,
+                vioTime[0], vioTime[1], vioTime[2], vioTime[3]));
         return satisfied;
     }
+
+    public boolean tryContinuous(int p) {
+        int[] vioTime = new int[4];
+        boolean satisfied = true;
+        Collection<SatConstraint> cstrs = new ArrayList<SatConstraint>();
+        ReconfigurationPlan plan;
+        int size = model.getMapping().getAllVMs().size() * p / 100;
+        List<VM> vms = new ArrayList<VM>(model.getMapping().getAllVMs());
+        Collections.shuffle(vms);
+        Iterator<VM> iterator = vms.iterator();
+        Collection<VM> vmSpike = new ArrayList<VM>();
+        while (iterator.hasNext() && size > 0) {
+            vmSpike.add(iterator.next());
+            size--;
+        }
+        cstrs.add(new Preserve(vmSpike, "cpu", 7));
+        cstrs.add(new Preserve(vmSpike, "ram", 8));
+        for (SatConstraint s : validateConstraint) {
+//            if (s instanceof Spread)
+            s.setContinuous(true);
+        }
+        cstrs.addAll(validateConstraint);
+        try {
+            plan = cra.solve(model, cstrs);
+            if (plan == null) {
+                sb.append(String.format("Model %2d. %d Continuous No solution\n", modelId, p));
+                return false;
+            } else {
+                for (SatConstraint s : validateConstraint) {
+                    boolean continuous = s.isContinuous();
+                    if (!continuous) s.setContinuous(true);
+                    if (!s.isSatisfied(plan)) {
+                        satisfied = false;
+                        if (s instanceof Spread) {
+                            vioTime[0]++;
+                        } else if (s instanceof Among) {
+                            vioTime[1]++;
+                        } else if (s instanceof SingleResourceCapacity) {
+                            vioTime[2]++;
+                        } else if (s instanceof MaxOnline) {
+                            vioTime[3]++;
+                        }
+//                        System.err.println("Does not satisfy continuous restriction");
+                    }
+                    s.setContinuous(continuous);
+                }
+            }
+        } catch (SolverException e) {
+            sb.append(String.format("Model %2d. Continuous: %s\n", modelId, e.getMessage()));
+            return false;
+        }
+        if (satisfied) sb.append(String.format("%2d\t%2d\t%2d\t%3d\t%d\t%d\tC\n", modelId,
+                p, vioTime[0], vioTime[1], vioTime[2], vioTime[3]));
+        return satisfied;
+    }
+
 }

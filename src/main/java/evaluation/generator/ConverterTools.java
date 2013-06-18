@@ -27,7 +27,7 @@ public class ConverterTools {
         SatConstraintsConverter converter = new SatConstraintsConverter();
         try {
             converter.register(new MaxOnlinesConverter());
-            converter.toJSON(constraints, new File(constraint_name + "Constraint.json"));
+            converter.toJSON(constraints, new File(constraint_name));
 
         } catch (JSONConverterException e) {
             System.err.println(e.getMessage());
@@ -38,7 +38,7 @@ public class ConverterTools {
         }
     }
 
-    public static Set<SatConstraint> getConstraints(Model model, Collection<String> constraint_files) {
+    public static Set<SatConstraint> getConstraints(Model model, String... constraint_files) {
 
         SatConstraintsConverter satConstraintsConverter = new SatConstraintsConverter();
         satConstraintsConverter.register(new MaxOnlinesConverter());

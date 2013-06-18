@@ -33,7 +33,7 @@ public class BenchMark {
     public static void main(String[] args) {
         parseOptions(args);
         Model model = ConverterTools.getModelFromFile(model_file);
-        Set<SatConstraint> constraints = ConverterTools.getConstraints(model, cstr_files);
+        Set<SatConstraint> constraints = ConverterTools.getConstraints(model, (String[]) cstr_files.toArray());
         Model fixed_model = EvaluationTools.prepareModel(model, constraints);
         if (fixed_model == null) {
             System.err.println("Unable to fix the origin model");
