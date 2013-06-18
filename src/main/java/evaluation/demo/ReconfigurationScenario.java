@@ -14,14 +14,12 @@ import java.util.Collection;
  * Date: 6/16/13
  * Time: 2:52 PM
  */
-public abstract class ReconfigurationScenario {
+public abstract class ReconfigurationScenario implements Runnable {
 
     int modelId;
     Model model;
     Collection<SatConstraint> validateConstraint;
     ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
-
-    abstract void run();
 
     abstract boolean discrete(int p);
 

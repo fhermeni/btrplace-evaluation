@@ -12,7 +12,7 @@ import java.util.*;
  * Date: 6/18/13
  * Time: 11:34 AM
  */
-public class VerticalElasticity extends ReconfigurationScenario implements Runnable {
+public class VerticalElasticity extends ReconfigurationScenario {
 
     StringBuilder sb;
 

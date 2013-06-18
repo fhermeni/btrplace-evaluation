@@ -32,7 +32,6 @@ public class ModelMaker implements Runnable {
     Collection<SatConstraint> validateConstraint;
     ArrayList<Application> appList;
 
-    private int PERCENT_APPS_INC = 5;
     private static int modelId = 1;
 
     public ModelMaker() {
@@ -42,8 +41,7 @@ public class ModelMaker implements Runnable {
         groups = new ArrayList<Collection<Node>>();
         validateConstraint = new ArrayList<SatConstraint>();
         appList = new ArrayList<Application>();
-//        overbook = new Overbook(model.getNodes(), "cpu", 4);
-
+        cra.setTimeLimit(300);
     }
 
     public static void main(String[] args) {
@@ -66,7 +64,7 @@ public class ModelMaker implements Runnable {
                 model.getMapping().addOnlineNode(node);
             }
             racks.add(ns);
-            if (j < 4) group1.addAll(ns);
+            if (j < 8) group1.addAll(ns);
             else group2.addAll(ns);
         }
         groups.add(group1);
@@ -76,7 +74,7 @@ public class ModelMaker implements Runnable {
     public void run() {
         initMap();
         runMix();
-        storeModel(false);
+        storeModel(true);
     }
 
 
@@ -84,10 +82,8 @@ public class ModelMaker implements Runnable {
         cra.getSatConstraintMapper().register(new CMaxOnlines.Builder());
         cra.getSatConstraintMapper().register(new CMaxSpareResources.Builder());
         Collection<SatConstraint> cstrs = new ArrayList<SatConstraint>();
-//        cstrs.add(new Overbook(model.getNodes(), "cpu", 4));
-//        cstrs.add(new Overbook(model.getNodes(), "ram", 4));
-        try {
 
+        try {
             Collection<Application> tmp = new ArrayList<Application>();
             for (int i = 0; i < 450; i++) {
                 Application app = new Application(model);
@@ -97,7 +93,7 @@ public class ModelMaker implements Runnable {
                 Among among = new Among(app.getDatabaseVM(), racks, restriction);
                 validateConstraint.add(among);
             }
-            addSplitAmong(cstrs);
+            cstrs.addAll(addSplitAmong());
             SingleResourceCapacity SReC = new SingleResourceCapacity(model.getNodes(), "cpu", 30, restriction);
             SingleResourceCapacity SReC2 = new SingleResourceCapacity(model.getNodes(), "ram", 120, restriction);
             MaxOnline maxOnline = new MaxOnline(model.getNodes(), 250, restriction);
@@ -110,6 +106,7 @@ public class ModelMaker implements Runnable {
                 model = plan.getResult();
                 appList.addAll(tmp);
                 System.out.println("Init Success");
+                System.out.println(model);
             }
         } catch (SolverException e) {
             e.printStackTrace();
@@ -134,20 +131,24 @@ public class ModelMaker implements Runnable {
         constraints.add(run);
     }
 
+    private Collection<SatConstraint> addSplitAmong() {
+        Collection<SatConstraint> constraints = new ArrayList<SatConstraint>();
+        Collection<Collection<VM>> vms = new ArrayList<Collection<VM>>();
+        Application app1 = new Application(model);
+        Application app2 = new Application(model);
+        vms.add(app1.getAllVM());
+        vms.add(app2.getAllVM());
+        SplitAmong splitAmong = new SplitAmong(vms, groups);
+        constraints.add(new Running(app1.getAllVM()));
+        constraints.add(new Running(app2.getAllVM()));
+        constraints.add(splitAmong);
+        return constraints;
+    }
+
     private void runOneALonelyApplication(Collection<SatConstraint> constraints) {
         Application app = new Application(model);
         runApplication(app, constraints);
         validateConstraint.add(new Lonely(new HashSet<VM>(app.getAllVM()), restriction));
-    }
-
-    private void addSplitAmong(Collection<SatConstraint> constraints) {
-        Application app = new Application(model);
-        Application app2 = new Application(model);
-        runApplication(app, constraints);
-        runApplication(app2, constraints);
-        SplitAmong splitAmong = new SplitAmong(Arrays.asList(app.getAllVM(), app.getAllVM()), groups);
-        validateConstraint.add(splitAmong);
-
     }
 
     private Collection<SatConstraint> loadSpike(Application app) {

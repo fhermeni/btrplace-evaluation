@@ -7,6 +7,7 @@ import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
 import btrplace.solver.choco.ChocoReconfigurationAlgorithm;
 import btrplace.solver.choco.DefaultChocoReconfigurationAlgorithm;
+import btrplace.solver.choco.constraint.CMaxOnlines;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -181,5 +182,62 @@ public class TestBtrPlace {
         Assert.assertNotNull(plan);
         System.out.println(plan.getResult().getMapping());
         System.out.println(plan);
+    }
+
+    @Test
+    public void testSplitAmong() {
+        Model model = new DefaultModel();
+        Collection<SatConstraint> constraints = new ArrayList<SatConstraint>();
+        Collection<Collection<Node>> groups = new ArrayList<Collection<Node>>();
+        Collection<Collection<VM>> vms = new ArrayList<Collection<VM>>();
+        ShareableResource cpu = new ShareableResource("cpu", 32, 1);
+        ShareableResource ram = new ShareableResource("ram", 128, 1);
+        model.attach(cpu);
+        model.attach(ram);
+        Collection<Node> group1 = new ArrayList<Node>();
+        Collection<Node> group2 = new ArrayList<Node>();
+        for (int j = 0; j < 16; j++) {
+            ArrayList<Node> ns = new ArrayList<Node>();
+            for (int i = 0; i < 16; i++) {
+                Node node = model.newNode();
+                ns.add(node);
+                model.getMapping().addOnlineNode(node);
+            }
+            if (j < 8) group1.addAll(ns);
+            else group2.addAll(ns);
+        }
+        groups.add(group1);
+        groups.add(group2);
+
+        Application app1 = new Application(model);
+        Application app2 = new Application(model);
+        vms.add(app1.getAllVM());
+        vms.add(app2.getAllVM());
+        SplitAmong splitAmong = new SplitAmong(vms, groups);
+
+        constraints.add(new Running(app1.getAllVM()));
+        constraints.add(new Running(app2.getAllVM()));
+        constraints.add(splitAmong);
+
+        for (int i = 0; i < 450; i++) {
+                Application app = new Application(model);
+            constraints.add(new Running(app.getAllVM()));
+            }
+        SingleResourceCapacity SReC = new SingleResourceCapacity(model.getNodes(), "cpu", 30);
+        SingleResourceCapacity SReC2 = new SingleResourceCapacity(model.getNodes(), "ram", 120);
+        MaxOnline maxOnline = new MaxOnline(model.getNodes(), 250);
+        constraints.add(SReC);
+        constraints.add(SReC2);
+        constraints.add(maxOnline);
+
+        ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
+        cra.getSatConstraintMapper().register(new CMaxOnlines.Builder());
+        ReconfigurationPlan solve = null;
+        try {
+           solve  = cra.solve(model, constraints);
+        } catch (SolverException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+        System.out.println(solve.getResult().getMapping());
     }
 }
