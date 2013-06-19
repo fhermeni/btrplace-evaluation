@@ -17,7 +17,7 @@ public class VerticalElasticity extends ReconfigurationScenario {
 
     public VerticalElasticity(int id) {
         modelId = id;
-        validateConstraint = new ArrayList<SatConstraint>();
+        validateConstraint = new ArrayList<>();
         sb = new StringBuilder();
         cra.setTimeLimit(300);
     }
@@ -42,13 +42,13 @@ public class VerticalElasticity extends ReconfigurationScenario {
     public boolean reconfigure(int p, boolean c) {
         int[] vioTime = new int[5];
         boolean satisfied = true;
-        Collection<SatConstraint> cstrs = new ArrayList<SatConstraint>();
+        Collection<SatConstraint> cstrs = new ArrayList<>();
         ReconfigurationPlan plan;
         int size = model.getMapping().getAllVMs().size() * p / 100;
-        List<VM> vms = new ArrayList<VM>(model.getMapping().getAllVMs());
+        List<VM> vms = new ArrayList<>(model.getMapping().getAllVMs());
         Collections.shuffle(vms);
         Iterator<VM> iterator = vms.iterator();
-        Collection<VM> vmSpike = new ArrayList<VM>();
+        Collection<VM> vmSpike = new ArrayList<>();
         while (iterator.hasNext() && size > 0) {
             vmSpike.add(iterator.next());
             size--;

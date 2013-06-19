@@ -8,13 +8,13 @@ import btrplace.json.plan.ReconfigurationPlanConverter;
 import btrplace.model.Model;
 import btrplace.model.constraint.SatConstraint;
 import btrplace.plan.ReconfigurationPlan;
+import evaluation.demo.Application;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * User: TU HUYNH DANG
@@ -29,20 +29,17 @@ public class ConverterTools {
             converter.register(new MaxOnlinesConverter());
             converter.toJSON(constraints, new File(constraint_name));
 
-        } catch (JSONConverterException e) {
-            System.err.println(e.getMessage());
-            System.exit(-1);
-        } catch (IOException e) {
+        } catch (JSONConverterException | IOException e) {
             System.err.println(e.getMessage());
             System.exit(-1);
         }
     }
 
-    public static Set<SatConstraint> getConstraints(Model model, String... constraint_files) {
+    public static ArrayList<SatConstraint> getConstraints(Model model, String... constraint_files) {
 
         SatConstraintsConverter satConstraintsConverter = new SatConstraintsConverter();
         satConstraintsConverter.register(new MaxOnlinesConverter());
-        Set<SatConstraint> ctrs = new HashSet<SatConstraint>();
+        ArrayList<SatConstraint> ctrs = new ArrayList<>();
         try {
             for (String s : constraint_files) {
                 satConstraintsConverter.setModel(model);
@@ -50,10 +47,7 @@ public class ConverterTools {
                 ctrs.addAll(satConstraint);
             }
 
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-            System.exit(-1);
-        } catch (JSONConverterException e) {
+        } catch (IOException | JSONConverterException e) {
             System.err.println(e.getMessage());
             System.exit(-1);
         }
@@ -64,9 +58,7 @@ public class ConverterTools {
         ModelConverter modelConverter = new ModelConverter();
         try {
             modelConverter.toJSON(m, new File(s));
-        } catch (JSONConverterException e1) {
-            e1.printStackTrace();
-        } catch (IOException e1) {
+        } catch (JSONConverterException | IOException e1) {
             e1.printStackTrace();
         }
     }
@@ -99,5 +91,25 @@ public class ConverterTools {
             System.err.println(e.getMessage());
             System.exit(-1);
         }
+    }
+
+    public static void applicationsToFile(Model model, Collection<Application> app, String output_file) {
+        ApplicationConverter converter = new ApplicationConverter(model);
+        try {
+            converter.toJSON(app, new File(output_file));
+        } catch (JSONConverterException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static List<Application> getApplicationsFromFile(Model model, String app_file) {
+        ApplicationConverter converter = new ApplicationConverter(model);
+        List<Application> applications = null;
+        try {
+            applications = converter.listFromJSON(new File(app_file));
+        } catch (IOException | JSONConverterException e) {
+            e.printStackTrace();
+        }
+        return applications;
     }
 }

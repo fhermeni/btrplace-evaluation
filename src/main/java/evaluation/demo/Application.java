@@ -28,20 +28,20 @@ public class Application implements Serializable, Cloneable {
     private ArrayList<ArrayList<VM>> tiers;
 
     public Application() {
-        vms = new ArrayList<VM>();
-        tier1 = new ArrayList<VM>();
-        tier2 = new ArrayList<VM>();
-        tier3 = new ArrayList<VM>();
-        tiers = new ArrayList<ArrayList<VM>>();
+        vms = new ArrayList<>();
+        tier1 = new ArrayList<>();
+        tier2 = new ArrayList<>();
+        tier3 = new ArrayList<>();
+        tiers = new ArrayList<>();
     }
 
     public Application(Model model) {
         index = model.getMapping().getAllVMs().size();
-        vms = new ArrayList<VM>();
-        tier1 = new ArrayList<VM>();
-        tier2 = new ArrayList<VM>();
-        tier3 = new ArrayList<VM>();
-        tiers = new ArrayList<ArrayList<VM>>();
+        vms = new ArrayList<>();
+        tier1 = new ArrayList<>();
+        tier2 = new ArrayList<>();
+        tier3 = new ArrayList<>();
+        tiers = new ArrayList<>();
         tiers.add(tier1);
         tiers.add(tier2);
         tiers.add(tier3);
@@ -81,18 +81,18 @@ public class Application implements Serializable, Cloneable {
     }
 
     public Collection<SatConstraint> spread(boolean cont) {
-        Collection<SatConstraint> spreads = new ArrayList<SatConstraint>(3);
+        Collection<SatConstraint> spreads = new ArrayList<>(3);
         for (ArrayList<VM> t : tiers) {
-            Spread spread = new Spread(new HashSet<VM>(t), cont);
+            Spread spread = new Spread(new HashSet<>(t), cont);
             spreads.add(spread);
         }
         return spreads;
     }
 
     public Collection<SatConstraint> gather(boolean cont) {
-        Collection<SatConstraint> gathers = new ArrayList<SatConstraint>(2);
+        Collection<SatConstraint> gathers = new ArrayList<>(2);
         for (int i = 0; i < 1; i++) {
-            Collection<VM> gVM = new ArrayList<VM>();
+            Collection<VM> gVM = new ArrayList<>();
             gVM.add(tier1.get(i));
             gVM.add(tier2.get(i));
             gVM.add(tier3.get(i));
@@ -103,7 +103,7 @@ public class Application implements Serializable, Cloneable {
     }
 
     public SatConstraint lonely(boolean cont) {
-        return new Lonely(new HashSet<VM>(vms), cont);
+        return new Lonely(new HashSet<>(vms), cont);
     }
 
     public void setTier1(ArrayList<VM> tier1) {
@@ -143,5 +143,23 @@ public class Application implements Serializable, Cloneable {
         StringBuilder sb = new StringBuilder();
         sb.append(String.format("Tier1: %s\nTier2: %s\nTier3: %s\n", tier1, tier2, tier3));
         return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof Application)) {
+            return false;
+        }
+        Application a2 = (Application) other;
+        if (!tier1.containsAll(a2.getTier1())) {
+            return false;
+        }
+        if (!tier2.containsAll(a2.getTier2())) {
+            return false;
+        }
+        if (!tier3.containsAll(a2.getTier3())) {
+            return false;
+        }
+        return true;
     }
 }

@@ -5,9 +5,7 @@ import btrplace.model.constraint.*;
 import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.*;
 
 /**
  * User: TU HUYNH DANG
@@ -16,13 +14,14 @@ import java.util.Collections;
  */
 public class HorizontalElasticity extends ReconfigurationScenario {
 
+    Collection<SatConstraint> validate;
     Collection<VM> cloneVMs;
-
     public HorizontalElasticity(int id) {
         modelId = id;
-        validateConstraint = new ArrayList<SatConstraint>();
+        validateConstraint = new ArrayList<>();
         sb = new StringBuilder();
-        cloneVMs = new ArrayList<VM>();
+        validate = new ArrayList<>();
+        cloneVMs = new ArrayList<>();
         cra.setTimeLimit(300);
     }
 
@@ -32,17 +31,14 @@ public class HorizontalElasticity extends ReconfigurationScenario {
         he.run();
     }
 
-
     @Override
     boolean reconfigure(int p, boolean c) {
         int[] vioTime = new int[5];
         boolean satisfied = true;
-        Collection<SatConstraint> cstrs = new ArrayList<SatConstraint>();
+        Collection<SatConstraint> cstrs = new ArrayList<>();
         ReconfigurationPlan plan;
-
-
-        Running run = new Running(cloneVMs);
-        cstrs.add(run);
+        cstrs.add(new Running(cloneVMs));
+        validateConstraint.addAll(validate);
         if (c) {
             for (SatConstraint s : validateConstraint) {
                 s.setContinuous(true);
@@ -77,37 +73,55 @@ public class HorizontalElasticity extends ReconfigurationScenario {
             sb.append(String.format("Model %d. %b: %s\n", modelId, c, e.getMessage()));
             return false;
         }
+        validateConstraint.removeAll(validate);
         sb.append(String.format("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%b\n%s\n", modelId, p,
                 vioTime[0], vioTime[1], vioTime[2], vioTime[3], vioTime[4], c, cra.getSolvingStatistics()));
         return satisfied;
     }
 
+    private void horizontalScale(Application app) {
+
+        int id = model.getMapping().getAllVMs().size();
+        for (int i = 0; i < 2; i++) {
+            VM vm = model.newVM(id++);
+            model.getMapping().addReadyVM(vm);
+            cloneVMs.add(vm);
+            app.getTier1().add(vm);
+        }
+        validate.add(new Spread(new HashSet<>(app.getTier1())));
+        for (int i = 0; i < 3; i++) {
+            VM vm = model.newVM(id++);
+            ecu.setConsumption(vm, 4);
+            ram.setConsumption(vm, 2);
+            model.getMapping().addReadyVM(vm);
+            app.getTier2().add(vm);
+            cloneVMs.add(vm);
+        }
+        validate.add(new Spread(new HashSet<>(app.getTier2())));
+        for (int i = 0; i < 4; i++) {
+            VM vm = model.newVM(id++);
+            ram.setConsumption(vm, 4);
+            model.getMapping().addReadyVM(vm);
+            app.getTier3().add(vm);
+            cloneVMs.add(vm);
+        }
+        validate.add(new Spread(new HashSet<>(app.getTier1())));
+    }
 
     @Override
     public void run() {
         readData(modelId);
+        Collections.shuffle((new ArrayList<>(applications)));
         int p = 5;
-        int count = 20; // 5% number of applications
-        Collections.shuffle(new ArrayList<Object>(validateConstraint));
-        for (SatConstraint s : validateConstraint) {
-            if (s instanceof Among) {
-                int size = s.getInvolvedVMs().size() * 8;
-                int id = model.getMapping().getAllVMs().size();
-                Collection<VM> tmp = new ArrayList<VM>();
-                for (int i = 0; i < size; i++) {
-                    VM clone = model.newVM(id++);
-                    model.getMapping().addReadyVM(clone);
-                    tmp.add(clone);
-                }
-                s.getInvolvedVMs().addAll(tmp);
-                cloneVMs.addAll(tmp);
-                count--;
-            }
-            if (count <= 0) break;
+        int size = applications.size() * p / 100;
+        Iterator<Application> iterator = applications.iterator();
+        while (size > 0 && iterator.hasNext()) {
+            Application app = iterator.next();
+            horizontalScale(app);
+            size--;
         }
-
-        reconfigure(p, false);
         reconfigure(p, true);
+        reconfigure(p, false);
         System.out.println(this);
     }
 

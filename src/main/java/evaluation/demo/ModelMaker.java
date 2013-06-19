@@ -13,7 +13,6 @@ import evaluation.generator.ConverterTools;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -26,7 +25,6 @@ public class ModelMaker implements Runnable {
 
     final static int NUM_RACK = 16;
     final static int NODES_PER_RACK = 16;
-    final static int RATIO = 4;
     Model model;
     boolean restriction;
     ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
@@ -43,10 +41,10 @@ public class ModelMaker implements Runnable {
         model = new DefaultModel();
         modelId = id;
         restriction = false;
-        racks = new ArrayList<Collection<Node>>();
-        groups = new ArrayList<Collection<Node>>();
-        validateConstraint = new ArrayList<SatConstraint>();
-        appList = new ArrayList<Application>();
+        racks = new ArrayList<>();
+        groups = new ArrayList<>();
+        validateConstraint = new ArrayList<>();
+        appList = new ArrayList<>();
         cra.setTimeLimit(300);
         ecu = new ShareableResource("ecu", 64, 1);
         ram = new ShareableResource("ram", 128, 1);
@@ -68,10 +66,10 @@ public class ModelMaker implements Runnable {
     }
 
     private void initMap() {
-        Collection<Node> group1 = new ArrayList<Node>();
-        Collection<Node> group2 = new ArrayList<Node>();
+        Collection<Node> group1 = new ArrayList<>();
+        Collection<Node> group2 = new ArrayList<>();
         for (int j = 0; j < NUM_RACK; j++) {
-            ArrayList<Node> ns = new ArrayList<Node>();
+            ArrayList<Node> ns = new ArrayList<>();
             for (int i = 0; i < NODES_PER_RACK; i++) {
                 Node node = model.newNode();
                 ns.add(node);
@@ -85,31 +83,30 @@ public class ModelMaker implements Runnable {
         groups.add(group2);
     }
 
-
     private boolean runMix() {
         cra.getSatConstraintMapper().register(new CMaxOnlines.Builder());
         cra.getSatConstraintMapper().register(new CMaxSpareResources.Builder());
-        Collection<SatConstraint> cstrs = new ArrayList<SatConstraint>();
+        Collection<SatConstraint> constraints = new ArrayList<>();
 
         try {
-            Collection<Application> tmp = new ArrayList<Application>();
+            Collection<Application> tmp = new ArrayList<>();
             for (int i = 0; i < 400; i++) {
                 Application app = new Application(model);
-                runApplication(app, cstrs);
+                runApplication(app, constraints);
                 tmp.add(app);
                 validateConstraint.addAll(app.spread(restriction));
                 Among among = new Among(app.getTier3(), racks, restriction);
                 validateConstraint.add(among);
             }
-            addSplitAmong(cstrs);
+            addSplitAmong(constraints);
             SingleResourceCapacity SReC = new SingleResourceCapacity(model.getNodes(), "ecu", 60, restriction);
             SingleResourceCapacity SReC2 = new SingleResourceCapacity(model.getNodes(), "ram", 120, restriction);
             MaxOnline maxOnline = new MaxOnline(model.getNodes(), 250, restriction);
             validateConstraint.add(maxOnline);
             validateConstraint.add(SReC);
             validateConstraint.add(SReC2);
-            cstrs.addAll(validateConstraint);
-            plan = cra.solve(model, cstrs);
+            constraints.addAll(validateConstraint);
+            plan = cra.solve(model, constraints);
             if (plan != null) {
                 model = plan.getResult();
                 appList.addAll(tmp);
@@ -152,7 +149,7 @@ public class ModelMaker implements Runnable {
     }
 
     private void addSplitAmong(Collection<SatConstraint> constraints) {
-        Collection<Collection<VM>> vms = new ArrayList<Collection<VM>>();
+        Collection<Collection<VM>> vms = new ArrayList<>();
         Application app1 = new Application(model);
         Application app2 = new Application(model);
         runApplication(app1, constraints);
@@ -164,25 +161,13 @@ public class ModelMaker implements Runnable {
         validateConstraint.add(splitAmong);
     }
 
-    private void runOneALonelyApplication(Collection<SatConstraint> constraints) {
-        Application app = new Application(model);
-        runApplication(app, constraints);
-        validateConstraint.add(new Lonely(new HashSet<VM>(app.getAllVM()), restriction));
-    }
-
-    private Collection<SatConstraint> loadSpike(Application app) {
-        Collection<SatConstraint> constraints = new ArrayList<SatConstraint>();
-        constraints.add(new Preserve(app.getTier2(), "cpu", 8));
-        constraints.add(new Preserve(app.getTier2(), "ram", 7));
-        return constraints;
-    }
-
     private void storeModel(boolean store) {
         if (store) {
             String path = System.getProperty("user.home") + System.getProperty("file.separator") + "model"
                     + System.getProperty("file.separator");
             ConverterTools.modelToFile(model, path + "model" + modelId + ".json");
             ConverterTools.constraintsToFile(validateConstraint, path + "constraints" + modelId + ".json");
+            ConverterTools.applicationsToFile(model, appList, path + "applications" + modelId + ".json");
         }
     }
 }

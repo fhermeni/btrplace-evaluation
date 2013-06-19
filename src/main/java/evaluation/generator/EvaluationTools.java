@@ -11,10 +11,9 @@ import btrplace.plan.event.Action;
 import btrplace.solver.SolverException;
 import btrplace.solver.choco.ChocoReconfigurationAlgorithm;
 import btrplace.solver.choco.DefaultChocoReconfigurationAlgorithm;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -74,7 +73,7 @@ public class EvaluationTools {
         return satConstraints;
     }
 
-    static public Model prepareModel(Model model, Set<SatConstraint> satConstraints) {
+    static public Model prepareModel(Model model, List<SatConstraint> satConstraints) {
         try {
             ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
             ReconfigurationPlan plan = cra.solve(model, satConstraints);

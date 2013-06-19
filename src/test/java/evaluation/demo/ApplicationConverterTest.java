@@ -2,9 +2,13 @@ package evaluation.demo;
 
 import btrplace.model.DefaultModel;
 import btrplace.model.Model;
+import evaluation.generator.ApplicationConverter;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * User: TU HUYNH DANG
@@ -12,21 +16,33 @@ import java.io.File;
  * Time: 5:00 PM
  */
 public class ApplicationConverterTest {
-    @Test
-    public void testFromJSON() throws Exception {
-        ApplicationConverter converter = new ApplicationConverter();
-        Application application = converter.fromJSON(new File("Application.json"));
-        System.out.println(application);
 
+    @Test
+    public void testApplicationConverter() throws Exception {
+        Model model = new DefaultModel();
+        Application app = new Application(model);
+        ApplicationConverter converter = new ApplicationConverter(model);
+        File file = new File(System.getProperty("user.home") + "/Application.json");
+        converter.toJSON(app, file);
+        Application application = converter.fromJSON(file);
+        Assert.assertEquals(app, application);
     }
 
     @Test
-    public void testToJSON() throws Exception {
+    public void testListApplicationConverter() throws Exception {
         Model model = new DefaultModel();
         Application app = new Application(model);
-        System.out.println(app);
-        ApplicationConverter converter = new ApplicationConverter();
-        converter.toJSON(app, new File(System.getProperty("user.home") + "/Application.json"));
+        Application app2 = new Application(model);
+        List<Application> appList = new ArrayList<>();
+        appList.add(app);
+        appList.add(app2);
+        ApplicationConverter converter = new ApplicationConverter(model);
+        System.out.println(appList);
+
+        File file = new File(System.getProperty("user.home") + "/Application2.json");
+        converter.toJSON(appList, file);
+        List<Application> application = converter.listFromJSON(file);
+        Assert.assertEquals(appList, application);
 
     }
 }
