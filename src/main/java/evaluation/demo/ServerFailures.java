@@ -1,60 +1,60 @@
 package evaluation.demo;
 
-import btrplace.model.VM;
+import btrplace.model.Node;
 import btrplace.model.constraint.*;
 import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * User: TU HUYNH DANG
- * Date: 6/18/13
- * Time: 11:34 AM
+ * Date: 6/19/13
+ * Time: 9:42 AM
  */
-public class VerticalElasticity extends ReconfigurationScenario {
+public class ServerFailures extends ReconfigurationScenario {
 
+    Collection<Node> failedNodes;
 
-    public VerticalElasticity(int id) {
+    public ServerFailures(int id) {
         modelId = id;
         validateConstraint = new ArrayList<SatConstraint>();
         sb = new StringBuilder();
+        failedNodes = new ArrayList<Node>();
         cra.setTimeLimit(300);
     }
 
     public static void main(String[] args) {
-        ReconfigurationScenario instance = new VerticalElasticity(1);
+        ReconfigurationScenario instance = new ServerFailures(1);
         instance.sb.append("Model\tP\tS\tA\tSA\tSReC\tMO\tcontinuous\n");
         instance.run();
     }
 
-
     @Override
     public void run() {
         readData(modelId);
-        int p = 5;
+        int p = 3;
+        List<Node> nodes = new ArrayList<Node>(model.getMapping().getAllNodes());
+        int size = 10;
+        Collections.shuffle(nodes);
+        for (int i = 0; i < size; i++) {
+            failedNodes.add(nodes.get(i));
+        }
         reconfigure(p, false);
         reconfigure(p, true);
         System.out.println(sb.toString());
     }
 
     @Override
-    public boolean reconfigure(int p, boolean c) {
+    boolean reconfigure(int p, boolean c) {
         int[] vioTime = new int[5];
         boolean satisfied = true;
         Collection<SatConstraint> cstrs = new ArrayList<SatConstraint>();
         ReconfigurationPlan plan;
-        int size = model.getMapping().getAllVMs().size() * p / 100;
-        List<VM> vms = new ArrayList<VM>(model.getMapping().getAllVMs());
-        Collections.shuffle(vms);
-        Iterator<VM> iterator = vms.iterator();
-        Collection<VM> vmSpike = new ArrayList<VM>();
-        while (iterator.hasNext() && size > 0) {
-            vmSpike.add(iterator.next());
-            size--;
-        }
-        cstrs.add(new Preserve(vmSpike, "ecu", 14));
-        cstrs.add(new Preserve(vmSpike, "ram", 7));
+        cstrs.add(new Offline(failedNodes));
         if (c) {
             for (SatConstraint s : validateConstraint) {
                 s.setContinuous(true);
@@ -91,8 +91,8 @@ public class VerticalElasticity extends ReconfigurationScenario {
             sb.append(String.format("Model %d. %b: %s\n", modelId, c, e.getMessage()));
             return false;
         }
-        sb.append(String.format("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%b\n", modelId, p,
-                vioTime[0], vioTime[1], vioTime[2], vioTime[3], vioTime[4], c));
+        sb.append(String.format("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%b\n%s", modelId, p,
+                vioTime[0], vioTime[1], vioTime[2], vioTime[3], vioTime[4], c, cra.getSolvingStatistics()));
         return satisfied;
     }
 
@@ -100,5 +100,4 @@ public class VerticalElasticity extends ReconfigurationScenario {
     public String toString() {
         return sb.toString();
     }
-
 }

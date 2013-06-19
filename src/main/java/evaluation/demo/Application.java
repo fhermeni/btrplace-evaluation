@@ -103,23 +103,26 @@ public class Application implements Serializable, Cloneable {
     }
 
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(String.format("Tier1: %s\nTier2: %s\nTier3: %s\n", tier1, tier2, tier3));
-        return sb.toString();
+    public ArrayList<VM> getTier1() {
+        return tier1;
     }
 
+    public ArrayList<VM> getTier2() {
+        return tier2;
+    }
+
+    public Collection<VM> getTier3() {
+        return tier3;
+    }
 
     public Collection<VM> getAllVM() {
         return vms;
     }
 
-    public Collection<VM> getDatabaseVM() {
-        return tier3;
-    }
-
-    public ArrayList<VM> getTier2() {
-        return tier2;
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("Tier1: %s\nTier2: %s\nTier3: %s\n", tier1, tier2, tier3));
+        return sb.toString();
     }
 }

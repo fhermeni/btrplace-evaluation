@@ -11,7 +11,10 @@ import btrplace.solver.choco.constraint.CMaxOnlines;
 import btrplace.solver.choco.constraint.CMaxSpareResources;
 import evaluation.generator.ConverterTools;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * User: Tu Huynh Dang
@@ -23,6 +26,7 @@ public class ModelMaker implements Runnable {
 
     final static int NUM_RACK = 16;
     final static int NODES_PER_RACK = 16;
+    final static int RATIO = 4;
     Model model;
     boolean restriction;
     ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
@@ -32,10 +36,11 @@ public class ModelMaker implements Runnable {
     Collection<SatConstraint> validateConstraint;
     ArrayList<Application> appList;
 
-    private static int modelId = 1;
+    private int modelId;
 
-    public ModelMaker() {
+    public ModelMaker(int id) {
         model = new DefaultModel();
+        modelId = id;
         restriction = false;
         racks = new ArrayList<Collection<Node>>();
         groups = new ArrayList<Collection<Node>>();
@@ -45,14 +50,14 @@ public class ModelMaker implements Runnable {
     }
 
     public static void main(String[] args) {
-        ModelMaker modelMaker = new ModelMaker();
+        ModelMaker modelMaker = new ModelMaker(1);
         modelMaker.run();
     }
 
     private void initMap() {
         ShareableResource cpu = new ShareableResource("cpu", 32, 1);
         model.attach(cpu);
-        ShareableResource ram = new ShareableResource("ram", 128, 1);
+        ShareableResource ram = new ShareableResource("ram", 128, 2);
         model.attach(ram);
         Collection<Node> group1 = new ArrayList<Node>();
         Collection<Node> group2 = new ArrayList<Node>();
@@ -74,6 +79,7 @@ public class ModelMaker implements Runnable {
     public void run() {
         initMap();
         runMix();
+        System.out.println("Load: " + currentLoad());
         storeModel(true);
     }
 
@@ -85,12 +91,12 @@ public class ModelMaker implements Runnable {
 
         try {
             Collection<Application> tmp = new ArrayList<Application>();
-            for (int i = 0; i < 450; i++) {
+            for (int i = 0; i < 400; i++) {
                 Application app = new Application(model);
                 runApplication(app, cstrs);
                 tmp.add(app);
                 validateConstraint.addAll(app.spread(restriction));
-                Among among = new Among(app.getDatabaseVM(), racks, restriction);
+                Among among = new Among(app.getTier3(), racks, restriction);
                 validateConstraint.add(among);
             }
             cstrs.addAll(addSplitAmong());
@@ -105,8 +111,6 @@ public class ModelMaker implements Runnable {
             if (plan != null) {
                 model = plan.getResult();
                 appList.addAll(tmp);
-                System.out.println("Init Success");
-                System.out.println(model);
             }
         } catch (SolverException e) {
             e.printStackTrace();
@@ -121,7 +125,7 @@ public class ModelMaker implements Runnable {
         Set<Node> onlineNodes = mapping.getOnlineNodes();
         Set<VM> runningVMs = mapping.getRunningVMs();
         ShareableResource sr = (ShareableResource) model.getView("ShareableResource.cpu");
-        double capacity = sr.sumCapacities(onlineNodes, true); // * overbook.getRatio() ;
+        double capacity = sr.sumCapacities(onlineNodes, true);
         double used = sr.sumConsumptions(runningVMs, true);
         return (int) (used / capacity * 100);
     }
@@ -142,6 +146,7 @@ public class ModelMaker implements Runnable {
         constraints.add(new Running(app1.getAllVM()));
         constraints.add(new Running(app2.getAllVM()));
         constraints.add(splitAmong);
+        validateConstraint.add(splitAmong);
         return constraints;
     }
 
@@ -163,7 +168,7 @@ public class ModelMaker implements Runnable {
             String path = System.getProperty("user.home") + System.getProperty("file.separator") + "model"
                     + System.getProperty("file.separator");
             ConverterTools.modelToFile(model, path + "model" + modelId + ".json");
-            ConverterTools.constraintsToFile(validateConstraint, path + "constraints" + modelId++ + ".json");
+            ConverterTools.constraintsToFile(validateConstraint, path + "constraints" + modelId + ".json");
         }
     }
 }

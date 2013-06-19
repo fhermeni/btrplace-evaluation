@@ -13,11 +13,13 @@ public class Driver {
     public static void main(String[] args) {
         ExecutorService thread = Executors.newFixedThreadPool(4);
 
-        int nP = 1;
+        int nP = 50;
 
         for (int i = 1; i <= nP; i++) {
             ReconfigurationScenario rs = new HorizontalElasticity(i);
             thread.execute(rs);
+//            ModelMaker modelMaker = new ModelMaker(i);
+//            thread.execute(modelMaker);
         }
         thread.shutdown();
 

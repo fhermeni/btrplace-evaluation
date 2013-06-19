@@ -20,10 +20,9 @@ public abstract class ReconfigurationScenario implements Runnable {
     Model model;
     Collection<SatConstraint> validateConstraint;
     ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
+    StringBuilder sb;
 
-    abstract boolean discrete(int p);
-
-    abstract boolean tryContinuous(int p);
+    abstract boolean reconfigure(int p, boolean c);
 
     public void readData(int id) {
         String path = System.getProperty("user.home") + System.getProperty("file.separator") + "model"
