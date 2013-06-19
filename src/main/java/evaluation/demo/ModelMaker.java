@@ -35,7 +35,8 @@ public class ModelMaker implements Runnable {
     Collection<Collection<Node>> groups;
     Collection<SatConstraint> validateConstraint;
     ArrayList<Application> appList;
-
+    ShareableResource ecu;
+    ShareableResource ram;
     private int modelId;
 
     public ModelMaker(int id) {
@@ -47,6 +48,10 @@ public class ModelMaker implements Runnable {
         validateConstraint = new ArrayList<SatConstraint>();
         appList = new ArrayList<Application>();
         cra.setTimeLimit(300);
+        ecu = new ShareableResource("ecu", 64, 1);
+        ram = new ShareableResource("ram", 128, 1);
+        model.attach(ecu);
+        model.attach(ram);
     }
 
     public static void main(String[] args) {
@@ -54,11 +59,15 @@ public class ModelMaker implements Runnable {
         modelMaker.run();
     }
 
+    public void run() {
+        initMap();
+        runMix();
+        float[] load = currentLoad();
+        System.out.printf("Load: %f, %f", load[0], load[1]);
+        storeModel(true);
+    }
+
     private void initMap() {
-        ShareableResource cpu = new ShareableResource("cpu", 32, 1);
-        model.attach(cpu);
-        ShareableResource ram = new ShareableResource("ram", 128, 2);
-        model.attach(ram);
         Collection<Node> group1 = new ArrayList<Node>();
         Collection<Node> group2 = new ArrayList<Node>();
         for (int j = 0; j < NUM_RACK; j++) {
@@ -74,13 +83,6 @@ public class ModelMaker implements Runnable {
         }
         groups.add(group1);
         groups.add(group2);
-    }
-
-    public void run() {
-        initMap();
-        runMix();
-        System.out.println("Load: " + currentLoad());
-        storeModel(true);
     }
 
 
@@ -99,8 +101,8 @@ public class ModelMaker implements Runnable {
                 Among among = new Among(app.getTier3(), racks, restriction);
                 validateConstraint.add(among);
             }
-            cstrs.addAll(addSplitAmong());
-            SingleResourceCapacity SReC = new SingleResourceCapacity(model.getNodes(), "cpu", 30, restriction);
+            addSplitAmong(cstrs);
+            SingleResourceCapacity SReC = new SingleResourceCapacity(model.getNodes(), "ecu", 60, restriction);
             SingleResourceCapacity SReC2 = new SingleResourceCapacity(model.getNodes(), "ram", 120, restriction);
             MaxOnline maxOnline = new MaxOnline(model.getNodes(), 250, restriction);
             validateConstraint.add(maxOnline);
@@ -120,34 +122,46 @@ public class ModelMaker implements Runnable {
         return true;
     }
 
-    private int currentLoad() {
+    private float[] currentLoad() {
+        float[] loads = new float[2];
         Mapping mapping = model.getMapping();
         Set<Node> onlineNodes = mapping.getOnlineNodes();
         Set<VM> runningVMs = mapping.getRunningVMs();
-        ShareableResource sr = (ShareableResource) model.getView("ShareableResource.cpu");
-        double capacity = sr.sumCapacities(onlineNodes, true);
-        double used = sr.sumConsumptions(runningVMs, true);
-        return (int) (used / capacity * 100);
+        ShareableResource sr = (ShareableResource) model.getView("ShareableResource.ecu");
+        ShareableResource sr2 = (ShareableResource) model.getView("ShareableResource.ram");
+        float capacity = sr.sumCapacities(onlineNodes, true);
+        float used = sr.sumConsumptions(runningVMs, true);
+        loads[0] = used / capacity * 100;
+        capacity = sr2.sumCapacities(onlineNodes, true);
+        used = sr2.sumConsumptions(runningVMs, true);
+        loads[1] = used / capacity * 100;
+        return loads;
     }
 
-    private void runApplication(Application a, Collection<SatConstraint> constraints) {
-        Running run = new Running(a.getAllVM());
+    private void runApplication(Application app, Collection<SatConstraint> constraints) {
+        for (VM vm : app.getTier2()) {
+            ecu.setConsumption(vm, 4);
+            ram.setConsumption(vm, 2);
+        }
+
+        for (VM vm : app.getTier3()) {
+            ram.setConsumption(vm, 4);
+        }
+        Running run = new Running(app.getAllVM());
         constraints.add(run);
     }
 
-    private Collection<SatConstraint> addSplitAmong() {
-        Collection<SatConstraint> constraints = new ArrayList<SatConstraint>();
+    private void addSplitAmong(Collection<SatConstraint> constraints) {
         Collection<Collection<VM>> vms = new ArrayList<Collection<VM>>();
         Application app1 = new Application(model);
         Application app2 = new Application(model);
+        runApplication(app1, constraints);
+        runApplication(app2, constraints);
         vms.add(app1.getAllVM());
         vms.add(app2.getAllVM());
         SplitAmong splitAmong = new SplitAmong(vms, groups);
-        constraints.add(new Running(app1.getAllVM()));
-        constraints.add(new Running(app2.getAllVM()));
         constraints.add(splitAmong);
         validateConstraint.add(splitAmong);
-        return constraints;
     }
 
     private void runOneALonelyApplication(Collection<SatConstraint> constraints) {
