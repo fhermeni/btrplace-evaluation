@@ -21,13 +21,20 @@ import java.util.*;
 public class TestBtrPlace {
 
     @Test
-    public void sumCapacity() {
+    public void sumCapacity() throws SolverException {
         Model m = new DefaultModel();
         ShareableResource cpu = new ShareableResource("cpu", 4, 1);
+        m.attach(cpu);
         Node n = m.newNode();
         Node n2 = m.newNode();
-        m.attach(cpu);
-        Assert.assertEquals(cpu.sumCapacities(Arrays.asList(n, n2), true), 8);
+        m.getMapping().addOnlineNode(n);
+        m.getMapping().addOnlineNode(n2);
+        Assert.assertEquals(cpu.sumCapacities(m.getMapping().getOnlineNodes(), true), 8);
+        Offline offline = new Offline(Collections.singleton(n));
+        ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
+        ReconfigurationPlan plan = cra.solve(m, Collections.<SatConstraint>singleton(offline));
+        Assert.assertEquals(cpu.sumCapacities(plan.getResult().getMapping().getOnlineNodes(), true), 4);
+
     }
 
     @Test
@@ -35,7 +42,7 @@ public class TestBtrPlace {
         Model model = new DefaultModel();
         ShareableResource cpu = new ShareableResource("cpu", 4, 1);
         model.attach(cpu);
-        ArrayList<Node> ns = new ArrayList<Node>();
+        ArrayList<Node> ns = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
             Node node = model.newNode();
             ns.add(node);
@@ -57,11 +64,11 @@ public class TestBtrPlace {
         model.getMapping().addRunningVM(v5, ns.get(2));
         boolean continuous = false;
         boolean satisfied = true;
-        Spread sp1 = new Spread(new HashSet<VM>(Arrays.asList(v0, v2)), continuous);
-        Spread sp2 = new Spread(new HashSet<VM>(Arrays.asList(v1, v4)), continuous);
-        Spread sp3 = new Spread(new HashSet<VM>(Arrays.asList(v3, v5)), continuous);
+        Spread sp1 = new Spread(new HashSet<>(Arrays.asList(v0, v2)), continuous);
+        Spread sp2 = new Spread(new HashSet<>(Arrays.asList(v1, v4)), continuous);
+        Spread sp3 = new Spread(new HashSet<>(Arrays.asList(v3, v5)), continuous);
         Preserve preserve = new Preserve(Collections.singleton(v3), "cpu", 3);
-        ArrayList<SatConstraint> ct = new ArrayList<SatConstraint>(Arrays.asList(sp1, sp2, sp3, preserve));
+        ArrayList<SatConstraint> ct = new ArrayList<>(Arrays.asList(sp1, sp2, sp3, preserve));
         while (satisfied) {
             ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
             ReconfigurationPlan plan = cra.solve(model, ct);
@@ -83,8 +90,8 @@ public class TestBtrPlace {
         Model model = new DefaultModel();
         ShareableResource cpu = new ShareableResource("cpu", 4, 1);
         model.attach(cpu);
-        ArrayList<Node> ns = new ArrayList<Node>();
-        ArrayList<VM> vs = new ArrayList<VM>();
+        ArrayList<Node> ns = new ArrayList<>();
+        ArrayList<VM> vs = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
             Node node = model.newNode();
             ns.add(node);
@@ -109,7 +116,7 @@ public class TestBtrPlace {
         model.getMapping().addOnlineNode(model.newNode());
         model.getMapping().addOnlineNode(model.newNode());
 
-        Collection<VM> vms = new ArrayList<VM>();
+        Collection<VM> vms = new ArrayList<>();
         for (int i = 0; i < 64; i++) {
             VM e = model.newVM();
             vms.add(e);
@@ -117,7 +124,7 @@ public class TestBtrPlace {
         }
         Running run = new Running(vms);
         Overbook overbook = new Overbook(model.getNodes(), "cpu", 4);
-        Collection<SatConstraint> VMconstraints = new ArrayList<SatConstraint>();
+        Collection<SatConstraint> VMconstraints = new ArrayList<>();
         VMconstraints.add(overbook);
         VMconstraints.add(run);
         ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
@@ -153,7 +160,7 @@ public class TestBtrPlace {
             VM vm = model.newVM();
             model.getMapping().addReadyVM(vm);
         }
-        HashSet<VM> vms = new HashSet<VM>();
+        HashSet<VM> vms = new HashSet<>();
         for (int i = 0; i < 18; i++) {
             VM vm = model.newVM();
             vms.add(vm);
@@ -163,7 +170,7 @@ public class TestBtrPlace {
         Lonely lonely = new Lonely(vms);
         Running run = new Running(allVMs);
         SingleResourceCapacity srec = new SingleResourceCapacity(model.getNodes(), "cpu", 30);
-        ArrayList<SatConstraint> constraints = new ArrayList<SatConstraint>();
+        ArrayList<SatConstraint> constraints = new ArrayList<>();
 
         constraints.addAll(Arrays.asList(lonely, run, srec, overcpu, overram));
 //        constraints.addAll(Arrays.asList(lonely, run, srec));
@@ -187,17 +194,17 @@ public class TestBtrPlace {
     @Test
     public void testSplitAmong() {
         Model model = new DefaultModel();
-        Collection<SatConstraint> constraints = new ArrayList<SatConstraint>();
-        Collection<Collection<Node>> groups = new ArrayList<Collection<Node>>();
-        Collection<Collection<VM>> vms = new ArrayList<Collection<VM>>();
+        Collection<SatConstraint> constraints = new ArrayList<>();
+        Collection<Collection<Node>> groups = new ArrayList<>();
+        Collection<Collection<VM>> vms = new ArrayList<>();
         ShareableResource cpu = new ShareableResource("cpu", 32, 1);
         ShareableResource ram = new ShareableResource("ram", 128, 1);
         model.attach(cpu);
         model.attach(ram);
-        Collection<Node> group1 = new ArrayList<Node>();
-        Collection<Node> group2 = new ArrayList<Node>();
+        Collection<Node> group1 = new ArrayList<>();
+        Collection<Node> group2 = new ArrayList<>();
         for (int j = 0; j < 16; j++) {
-            ArrayList<Node> ns = new ArrayList<Node>();
+            ArrayList<Node> ns = new ArrayList<>();
             for (int i = 0; i < 16; i++) {
                 Node node = model.newNode();
                 ns.add(node);
@@ -220,9 +227,9 @@ public class TestBtrPlace {
         constraints.add(splitAmong);
 
         for (int i = 0; i < 450; i++) {
-                Application app = new Application(model);
+            Application app = new Application(model);
             constraints.add(new Running(app.getAllVM()));
-            }
+        }
         SingleResourceCapacity SReC = new SingleResourceCapacity(model.getNodes(), "cpu", 30);
         SingleResourceCapacity SReC2 = new SingleResourceCapacity(model.getNodes(), "ram", 120);
         MaxOnline maxOnline = new MaxOnline(model.getNodes(), 250);
@@ -234,10 +241,10 @@ public class TestBtrPlace {
         cra.getSatConstraintMapper().register(new CMaxOnlines.Builder());
         ReconfigurationPlan solve = null;
         try {
-           solve  = cra.solve(model, constraints);
+            solve = cra.solve(model, constraints);
         } catch (SolverException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
         }
-        System.out.println(solve.getResult().getMapping());
+        Assert.assertNotNull(solve);
     }
 }

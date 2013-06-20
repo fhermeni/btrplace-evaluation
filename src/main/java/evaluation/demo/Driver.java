@@ -16,10 +16,10 @@ public class Driver {
         int nP = 50;
 
         for (int i = 1; i <= nP; i++) {
-            ReconfigurationScenario rs = new HorizontalElasticity(i);
-            thread.execute(rs);
-//            ModelMaker modelMaker = new ModelMaker(i);
-//            thread.execute(modelMaker);
+//            ReconfigurationScenario rs = new HorizontalElasticity(i);
+//            thread.execute(rs);
+            ModelMaker modelMaker = new ModelMaker(i);
+            thread.execute(modelMaker);
         }
         thread.shutdown();
 

@@ -1,9 +1,10 @@
-package evaluation.demo;
+package evaluation.scenarios;
 
 import btrplace.model.VM;
 import btrplace.model.constraint.*;
 import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
+import evaluation.demo.Application;
 
 import java.util.*;
 
@@ -16,13 +17,14 @@ public class HorizontalElasticity extends ReconfigurationScenario {
 
     Collection<SatConstraint> validate;
     Collection<VM> cloneVMs;
+
     public HorizontalElasticity(int id) {
         modelId = id;
         validateConstraint = new ArrayList<>();
         sb = new StringBuilder();
         validate = new ArrayList<>();
         cloneVMs = new ArrayList<>();
-        cra.setTimeLimit(300);
+        cra.setTimeLimit(TIME_OUT);
     }
 
     public static void main(String[] args) {
@@ -74,37 +76,48 @@ public class HorizontalElasticity extends ReconfigurationScenario {
             return false;
         }
         validateConstraint.removeAll(validate);
-        sb.append(String.format("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%b\n%s\n", modelId, p,
-                vioTime[0], vioTime[1], vioTime[2], vioTime[3], vioTime[4], c, cra.getSolvingStatistics()));
+        sb.append(String.format("%-2d\t%-3d\t%-2d\t%d\t%d\t%d\t%d\t%b\n", modelId, p,
+                vioTime[0], vioTime[1], vioTime[2], vioTime[3], vioTime[4], c));
+        float[] load = currentLoad(model);
+        sb.append(String.format("Before RP. CPU:\t%f\tRAM:%f\n", load[0], load[1]));
+        load = currentLoad(plan.getResult());
+        sb.append(String.format("After RP. CPU:\t%f\tRAM:%f\n", load[0], load[1]));
+        sb.append(cra.getSolvingStatistics());
         return satisfied;
     }
 
     private void horizontalScale(Application app) {
-
+        Collection<VM> tmp = new ArrayList<>();
         int id = model.getMapping().getAllVMs().size();
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < app.getTier1().size(); i++) {
             VM vm = model.newVM(id++);
             model.getMapping().addReadyVM(vm);
             cloneVMs.add(vm);
-            app.getTier1().add(vm);
+            tmp.add(vm);
         }
+        app.getTier1().addAll(tmp);
+        tmp.clear();
         validate.add(new Spread(new HashSet<>(app.getTier1())));
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < app.getTier2().size(); i++) {
             VM vm = model.newVM(id++);
             ecu.setConsumption(vm, 4);
             ram.setConsumption(vm, 2);
             model.getMapping().addReadyVM(vm);
-            app.getTier2().add(vm);
+            tmp.add(vm);
             cloneVMs.add(vm);
         }
+        app.getTier2().addAll(tmp);
+        tmp.clear();
         validate.add(new Spread(new HashSet<>(app.getTier2())));
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < app.getTier3().size(); i++) {
             VM vm = model.newVM(id++);
             ram.setConsumption(vm, 4);
             model.getMapping().addReadyVM(vm);
-            app.getTier3().add(vm);
+            tmp.add(vm);
             cloneVMs.add(vm);
         }
+        app.getTier3().addAll(tmp);
+        tmp.clear();
         validate.add(new Spread(new HashSet<>(app.getTier1())));
     }
 
@@ -112,7 +125,7 @@ public class HorizontalElasticity extends ReconfigurationScenario {
     public void run() {
         readData(modelId);
         Collections.shuffle((new ArrayList<>(applications)));
-        int p = 5;
+        int p = 20;
         int size = applications.size() * p / 100;
         Iterator<Application> iterator = applications.iterator();
         while (size > 0 && iterator.hasNext()) {
@@ -120,8 +133,8 @@ public class HorizontalElasticity extends ReconfigurationScenario {
             horizontalScale(app);
             size--;
         }
-        reconfigure(p, true);
         reconfigure(p, false);
+        reconfigure(p, true);
         System.out.println(this);
     }
 
