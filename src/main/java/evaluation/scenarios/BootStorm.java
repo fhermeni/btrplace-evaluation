@@ -4,6 +4,7 @@ import btrplace.model.VM;
 import btrplace.model.constraint.*;
 import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
+import btrplace.solver.choco.SolvingStatistics;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -91,10 +92,11 @@ public class BootStorm extends ReconfigurationScenario {
         sb.append(String.format("%-2d\t%-3d\t%-2d\t%d\t%d\t%d\t%d\t%b\n", modelId, p,
                 vioTime[0], vioTime[1], vioTime[2], vioTime[3], vioTime[4], c));
         float[] load = currentLoad(model);
-        sb.append(String.format("Before RP. CPU:\t%f\tRAM:%f\n", load[0], load[1]));
+        sb.append(String.format("%f\t%f\t", load[0], load[1]));
         load = currentLoad(plan.getResult());
-        sb.append(String.format("After RP. CPU:\t%f\tRAM:%f\n", load[0], load[1]));
-        sb.append(cra.getSolvingStatistics());
+        sb.append(String.format("%f\t%f\t", load[0], load[1]));
+        SolvingStatistics statistics = cra.getSolvingStatistics();
+        sb.append(String.format("%d\t%d\t%d\n", statistics.getSolvingDuration(), plan.getDuration(), plan.getSize()));
         return satisfied;
     }
 

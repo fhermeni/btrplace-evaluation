@@ -13,6 +13,7 @@ import evaluation.generator.ConverterTools;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -61,14 +62,14 @@ public class ModelMaker implements Runnable {
         initMap();
         runMix();
         float[] load = currentLoad();
-        System.out.printf("Load: %f, %f", load[0], load[1]);
+        System.out.printf("%f, %f", load[0], load[1]);
         storeModel(true);
     }
 
     private void initMap() {
         Collection<Node> group1 = new ArrayList<>();
         Collection<Node> group2 = new ArrayList<>();
-        for (int j = 0; j < NUM_RACK; j++) {
+        for (int j = 0; j < NUM_RACK - 1; j++) {
             ArrayList<Node> ns = new ArrayList<>();
             for (int i = 0; i < NODES_PER_RACK; i++) {
                 Node node = model.newNode();
@@ -78,6 +79,12 @@ public class ModelMaker implements Runnable {
             racks.add(ns);
             if (j < 8) group1.addAll(ns);
             else group2.addAll(ns);
+        }
+
+        for (int i = 0; i < NODES_PER_RACK; i++) {
+            Node node = model.newNode();
+            model.getMapping().addOfflineNode(node);
+            group2.add(node);
         }
         groups.add(group1);
         groups.add(group2);
@@ -99,9 +106,10 @@ public class ModelMaker implements Runnable {
                 validateConstraint.add(among);
             }
             addSplitAmong(constraints);
+//            runApplicationLonely(new Application(model), constraints);
             SingleResourceCapacity SReC = new SingleResourceCapacity(model.getNodes(), "ecu", 60, restriction);
             SingleResourceCapacity SReC2 = new SingleResourceCapacity(model.getNodes(), "ram", 120, restriction);
-            MaxOnline maxOnline = new MaxOnline(model.getNodes(), 250, restriction);
+            MaxOnline maxOnline = new MaxOnline(model.getNodes(), 240, restriction);
             validateConstraint.add(maxOnline);
             validateConstraint.add(SReC);
             validateConstraint.add(SReC2);
@@ -147,6 +155,22 @@ public class ModelMaker implements Runnable {
         Running run = new Running(app.getAllVM());
         constraints.add(run);
     }
+
+    private void runApplicationLonely(Application app, Collection<SatConstraint> constraints) {
+        for (VM vm : app.getTier2()) {
+            ecu.setConsumption(vm, 4);
+            ram.setConsumption(vm, 2);
+        }
+
+        for (VM vm : app.getTier3()) {
+            ram.setConsumption(vm, 4);
+        }
+        Running run = new Running(app.getAllVM());
+        Lonely lonely = new Lonely(new HashSet<>(app.getAllVM()));
+        validateConstraint.add(lonely);
+        constraints.add(run);
+    }
+
 
     private void addSplitAmong(Collection<SatConstraint> constraints) {
         Collection<Collection<VM>> vms = new ArrayList<>();

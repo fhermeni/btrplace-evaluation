@@ -12,8 +12,8 @@ import java.util.concurrent.Executors;
  */
 public class Evaluator {
     public static void main(String[] args) {
-        ExecutorService thread = Executors.newFixedThreadPool(4);
-        ReconfigurationScenario.setTimeOut(864);  // 12 hours for Server Failure scenario
+        ExecutorService thread = Executors.newFixedThreadPool(8);
+        ReconfigurationScenario.setTimeOut(300);  // 12 hours for Server Failure scenario
         ReconfigurationScenario rs;
 
         int nP = 50;

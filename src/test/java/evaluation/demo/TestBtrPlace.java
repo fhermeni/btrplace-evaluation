@@ -247,4 +247,67 @@ public class TestBtrPlace {
         }
         Assert.assertNotNull(solve);
     }
+
+    @Test
+    public void testServerFailures() {
+        Model model = new DefaultModel();
+        Collection<SatConstraint> constraints = new ArrayList<>();
+        Collection<Collection<Node>> groups = new ArrayList<>();
+        Collection<Collection<VM>> vms = new ArrayList<>();
+        ShareableResource cpu = new ShareableResource("cpu", 64, 1);
+        ShareableResource ram = new ShareableResource("ram", 128, 1);
+        model.attach(cpu);
+        model.attach(ram);
+        Collection<Node> group1 = new ArrayList<>();
+        Collection<Node> group2 = new ArrayList<>();
+        for (int j = 0; j < 15; j++) {
+            ArrayList<Node> ns = new ArrayList<>();
+            for (int i = 0; i < 16; i++) {
+                Node node = model.newNode();
+                ns.add(node);
+                model.getMapping().addOnlineNode(node);
+            }
+            if (j < 8) group1.addAll(ns);
+            else group2.addAll(ns);
+        }
+
+        for (int k = 0; k < 16; k++) {
+            Node node = model.newNode();
+            model.getMapping().addOfflineNode(node);
+            group2.add(node);
+        }
+        groups.add(group1);
+        groups.add(group2);
+
+        Application app1 = new Application(model);
+        Application app2 = new Application(model);
+        vms.add(app1.getAllVM());
+        vms.add(app2.getAllVM());
+        SplitAmong splitAmong = new SplitAmong(vms, groups);
+
+        constraints.add(new Running(app1.getAllVM()));
+        constraints.add(new Running(app2.getAllVM()));
+        constraints.add(splitAmong);
+
+        for (int i = 0; i < 400; i++) {
+            Application app = new Application(model);
+            constraints.add(new Running(app.getAllVM()));
+        }
+        SingleResourceCapacity SReC = new SingleResourceCapacity(model.getNodes(), "cpu", 60);
+        SingleResourceCapacity SReC2 = new SingleResourceCapacity(model.getNodes(), "ram", 120);
+        MaxOnline maxOnline = new MaxOnline(model.getNodes(), 240);
+        constraints.add(SReC);
+        constraints.add(SReC2);
+        constraints.add(maxOnline);
+
+        ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
+        cra.getSatConstraintMapper().register(new CMaxOnlines.Builder());
+        ReconfigurationPlan solve = null;
+        try {
+            solve = cra.solve(model, constraints);
+        } catch (SolverException e) {
+            e.printStackTrace();
+        }
+        Assert.assertNotNull(solve);
+    }
 }
