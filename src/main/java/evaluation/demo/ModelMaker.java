@@ -62,30 +62,27 @@ public class ModelMaker implements Runnable {
         initMap();
         runMix();
         float[] load = currentLoad();
-        System.out.printf("%f, %f", load[0], load[1]);
+        System.out.printf("%f, %f\n", load[0], load[1]);
         storeModel(true);
     }
 
     private void initMap() {
         Collection<Node> group1 = new ArrayList<>();
         Collection<Node> group2 = new ArrayList<>();
-        for (int j = 0; j < NUM_RACK - 1; j++) {
+        for (int j = 0; j < NUM_RACK; j++) {
             ArrayList<Node> ns = new ArrayList<>();
             for (int i = 0; i < NODES_PER_RACK; i++) {
                 Node node = model.newNode();
                 ns.add(node);
-                model.getMapping().addOnlineNode(node);
+                if(i == NODES_PER_RACK-1)
+                    model.getMapping().addOfflineNode(node);
+                else model.getMapping().addOnlineNode(node);
             }
             racks.add(ns);
             if (j < 8) group1.addAll(ns);
             else group2.addAll(ns);
         }
 
-        for (int i = 0; i < NODES_PER_RACK; i++) {
-            Node node = model.newNode();
-            model.getMapping().addOfflineNode(node);
-            group2.add(node);
-        }
         groups.add(group1);
         groups.add(group2);
     }

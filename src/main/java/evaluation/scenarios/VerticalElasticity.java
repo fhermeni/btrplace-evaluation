@@ -25,11 +25,11 @@ public class VerticalElasticity extends ReconfigurationScenario {
         validateConstraint = new ArrayList<>();
         sb = new StringBuilder();
         cra.setTimeLimit(TIME_OUT);
+        cra.doRepair(true);
     }
 
     public static void main(String[] args) {
         ReconfigurationScenario instance = new VerticalElasticity(1);
-        instance.sb.append("Model\tP\tS\tA\tSA\tSReC\tMO\tcontinuous\n");
         instance.run();
     }
 
@@ -40,7 +40,7 @@ public class VerticalElasticity extends ReconfigurationScenario {
         int p = 20;
         reconfigure(p, false);
         reconfigure(p, true);
-        System.out.println(sb.toString());
+        System.out.print(sb.toString());
     }
 
     @Override
@@ -77,7 +77,7 @@ public class VerticalElasticity extends ReconfigurationScenario {
         try {
             plan = cra.solve(model, constraints);
             if (plan == null) {
-                sb.append(String.format("Model %d. %d %b No solution\n", modelId, p, c));
+                sb.append(String.format("Model %d\t %b \t No solution\n", modelId, c));
                 return false;
             } else {
                 for (SatConstraint s : validateConstraint) {
@@ -101,11 +101,11 @@ public class VerticalElasticity extends ReconfigurationScenario {
                 }
             }
         } catch (SolverException e) {
-            sb.append(String.format("Model %d. %b: %s\n", modelId, c, e.getMessage()));
+            sb.append(String.format("Model %d.\t%b\t%s\n", modelId, c, e.getMessage()));
             return false;
         }
-        sb.append(String.format("%-2d\t%-3d\t%-2d\t%d\t%d\t%d\t%d\t%b\n", modelId, p,
-                vioTime[0], vioTime[1], vioTime[2], vioTime[3], vioTime[4], c));
+        sb.append(String.format("%-2d\t%b\t%-3d\t%-2d\t%d\t%d\t%d\t%d\t", modelId, c, p,
+                vioTime[0], vioTime[1], vioTime[2], vioTime[3], vioTime[4]));
         float[] load = currentLoad(model);
         sb.append(String.format("%f\t%f\t", load[0], load[1]));
         load = currentLoad(plan.getResult());

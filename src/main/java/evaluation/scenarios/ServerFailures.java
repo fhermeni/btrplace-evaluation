@@ -63,7 +63,7 @@ public class ServerFailures extends ReconfigurationScenario {
         reconfigure(size, false);
         reconfigure(size, true);
 
-        System.out.println(sb.toString());
+        System.out.print(sb.toString());
     }
 
     @Override
@@ -83,7 +83,7 @@ public class ServerFailures extends ReconfigurationScenario {
         try {
             plan = cra.solve(model, constraints);
             if (plan == null) {
-                sb.append(String.format("Model %d. %d %b No solution\n", modelId, p, c));
+                sb.append(String.format("Model %d\t %b \t No solution\n", modelId, c));
                 return false;
             } else {
                 for (Node n : failedNodes) {
@@ -92,7 +92,6 @@ public class ServerFailures extends ReconfigurationScenario {
                     }
                 }
 
-                System.out.println();
                 for (SatConstraint s : validateConstraint) {
                     boolean continuous = s.isContinuous();
                     if (!continuous) s.setContinuous(true);
@@ -114,13 +113,12 @@ public class ServerFailures extends ReconfigurationScenario {
                 }
             }
         } catch (SolverException e) {
-            e.printStackTrace();
-            sb.append(String.format("Model %d. %b: %s\n", modelId, c, e.getMessage()));
+            sb.append(String.format("Model %d.\t%b\t%s\n", modelId, c, e.getMessage()));
             return false;
         }
 
-        sb.append(String.format("%-2d\t%-3d\t%-2d\t%d\t%d\t%d\t%d\t%b\t", modelId, p,
-                vioTime[0], vioTime[1], vioTime[2], vioTime[3], vioTime[4], c));
+        sb.append(String.format("%-2d\t%b\t%-3d\t%-2d\t%d\t%d\t%d\t%d\t", modelId, c, p,
+                vioTime[0], vioTime[1], vioTime[2], vioTime[3], vioTime[4]));
         float[] load = currentLoad(model);
         sb.append(String.format("%f\t%f\t", load[0], load[1]));
         load = currentLoad(plan.getResult());
