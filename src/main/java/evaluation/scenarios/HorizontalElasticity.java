@@ -6,6 +6,7 @@ import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
 import btrplace.solver.choco.SolvingStatistics;
 import evaluation.demo.Application;
+import evaluation.generator.ConverterTools;
 
 import java.util.*;
 
@@ -76,6 +77,10 @@ public class HorizontalElasticity extends ReconfigurationScenario {
             sb.append(String.format("Model %d.\t%b\t%s\n", modelId, c, e.getMessage()));
             return false;
         }
+        String path = System.getProperty("user.home") + System.getProperty("file.separator") + "plan"
+                + System.getProperty("file.separator") + "he" + System.getProperty("file.separator");
+
+        ConverterTools.planToFile(plan, String.format("%s%d%b", path, modelId, c));
         validateConstraint.removeAll(validate);
         sb.append(String.format("%-2d\t%b\t%-3d\t%-2d\t%d\t%d\t%d\t%d\t", modelId, c, p,
                 vioTime[0], vioTime[1], vioTime[2], vioTime[3], vioTime[4]));
@@ -120,7 +125,7 @@ public class HorizontalElasticity extends ReconfigurationScenario {
         }
         app.getTier3().addAll(tmp);
         tmp.clear();
-        validate.add(new Spread(new HashSet<>(app.getTier1())));
+        validate.add(new Spread(new HashSet<>(app.getTier3())));
     }
 
     @Override

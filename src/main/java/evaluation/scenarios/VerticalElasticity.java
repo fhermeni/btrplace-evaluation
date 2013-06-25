@@ -6,6 +6,7 @@ import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
 import btrplace.solver.choco.SolvingStatistics;
 import evaluation.demo.Application;
+import evaluation.generator.ConverterTools;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,7 +30,7 @@ public class VerticalElasticity extends ReconfigurationScenario {
     }
 
     public static void main(String[] args) {
-        ReconfigurationScenario instance = new VerticalElasticity(1);
+        ReconfigurationScenario instance = new VerticalElasticity(2);
         instance.run();
     }
 
@@ -37,7 +38,7 @@ public class VerticalElasticity extends ReconfigurationScenario {
     @Override
     public void run() {
         readData(modelId);
-        int p = 20;
+        int p = 10;
         reconfigure(p, false);
         reconfigure(p, true);
         System.out.print(sb.toString());
@@ -62,12 +63,12 @@ public class VerticalElasticity extends ReconfigurationScenario {
             tier3.addAll(randomApp.getTier3());
             size--;
         }
-        constraints.add(new Preserve(tier2, "ecu", 2));
-        constraints.add(new Preserve(tier2, "ram", 4));
+        constraints.add(new Preserve(tier1, "ecu", 2));
+        constraints.add(new Preserve(tier1, "ram", 4));
         constraints.add(new Preserve(tier2, "ecu", 14));
         constraints.add(new Preserve(tier2, "ram", 7));
-        constraints.add(new Preserve(tier2, "ecu", 4));
-        constraints.add(new Preserve(tier2, "ram", 17));
+        constraints.add(new Preserve(tier3, "ecu", 4));
+        constraints.add(new Preserve(tier3, "ram", 17));
         if (c) {
             for (SatConstraint s : validateConstraint) {
                 s.setContinuous(true);
@@ -104,6 +105,11 @@ public class VerticalElasticity extends ReconfigurationScenario {
             sb.append(String.format("Model %d.\t%b\t%s\n", modelId, c, e.getMessage()));
             return false;
         }
+        String path = System.getProperty("user.home") + System.getProperty("file.separator") + "plan"
+                + System.getProperty("file.separator") + "ve" + System.getProperty("file.separator");
+
+        ConverterTools.planToFile(plan, String.format("%s%d%b", path, modelId, c));
+
         sb.append(String.format("%-2d\t%b\t%-3d\t%-2d\t%d\t%d\t%d\t%d\t", modelId, c, p,
                 vioTime[0], vioTime[1], vioTime[2], vioTime[3], vioTime[4]));
         float[] load = currentLoad(model);

@@ -6,6 +6,7 @@ import btrplace.model.constraint.*;
 import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
 import btrplace.solver.choco.SolvingStatistics;
+import evaluation.generator.ConverterTools;
 
 import java.util.*;
 
@@ -116,6 +117,11 @@ public class ServerFailures extends ReconfigurationScenario {
             sb.append(String.format("Model %d.\t%b\t%s\n", modelId, c, e.getMessage()));
             return false;
         }
+
+        String path = System.getProperty("user.home") + System.getProperty("file.separator") + "plan"
+                + System.getProperty("file.separator") + "sf" + System.getProperty("file.separator");
+
+        ConverterTools.planToFile(plan, String.format("%s%d%b", path, modelId, c));
 
         sb.append(String.format("%-2d\t%b\t%-3d\t%-2d\t%d\t%d\t%d\t%d\t", modelId, c, p,
                 vioTime[0], vioTime[1], vioTime[2], vioTime[3], vioTime[4]));

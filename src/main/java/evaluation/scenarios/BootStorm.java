@@ -5,6 +5,7 @@ import btrplace.model.constraint.*;
 import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
 import btrplace.solver.choco.SolvingStatistics;
+import evaluation.generator.ConverterTools;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,7 +33,7 @@ public class BootStorm extends ReconfigurationScenario {
     @Override
     public void run() {
         readData(modelId);
-        int p = 100;
+        int p = 300;
         reconfigure(p, false);
         reconfigure(p, true);
         System.out.print(this);
@@ -42,17 +43,29 @@ public class BootStorm extends ReconfigurationScenario {
     public boolean reconfigure(int p, boolean c) {
         int[] vioTime = new int[5];
         boolean satisfied = true;
+        int currentVmId = model.getMapping().getAllVMs().size();
         Collection<SatConstraint> cstrs = new ArrayList<>();
         ReconfigurationPlan plan;
-        Collection<VM> bootVMS = new ArrayList<>();
+        Collection<VM> bootVMS1 = new ArrayList<>();
+        Collection<VM> bootVMS2 = new ArrayList<>();
+        Collection<VM> bootVMS3 = new ArrayList<>();
         for (int i = 0; i < p; i++) {
-            VM vm = model.newVM();
+            VM vm = model.newVM(currentVmId++);
             model.getMapping().addReadyVM(vm);
-            bootVMS.add(vm);
+            if (i % 3 == 0) bootVMS1.add(vm);
+            else if (i % 3 == 1) bootVMS2.add(vm);
+            else bootVMS3.add(vm);
         }
-        cstrs.add(new Running(bootVMS));
-        cstrs.add(new Preserve(bootVMS, "ecu", 2));
-        cstrs.add(new Preserve(bootVMS, "ram", 4));
+        cstrs.add(new Running(bootVMS1));
+        cstrs.add(new Running(bootVMS2));
+        cstrs.add(new Running(bootVMS3));
+        cstrs.add(new Preserve(bootVMS1, "ecu", 2));
+        cstrs.add(new Preserve(bootVMS1, "ram", 4));
+        cstrs.add(new Preserve(bootVMS2, "ecu", 14));
+        cstrs.add(new Preserve(bootVMS2, "ram", 7));
+        cstrs.add(new Preserve(bootVMS3, "ecu", 4));
+        cstrs.add(new Preserve(bootVMS3, "ram", 17));
+
         if (c) {
             for (SatConstraint s : validateConstraint) {
                 s.setContinuous(true);
@@ -89,6 +102,11 @@ public class BootStorm extends ReconfigurationScenario {
             sb.append(String.format("Model %d.\t%b\t%s\n", modelId, c, e.getMessage()));
             return false;
         }
+        String path = System.getProperty("user.home") + System.getProperty("file.separator") + "plan"
+                + System.getProperty("file.separator") + "bs" + System.getProperty("file.separator");
+
+        ConverterTools.planToFile(plan, String.format("%s%d%b", path, modelId, c));
+
         sb.append(String.format("%-2d\t%b\t%-3d\t%-2d\t%d\t%d\t%d\t%d\t", modelId, c, p,
                 vioTime[0], vioTime[1], vioTime[2], vioTime[3], vioTime[4]));
         float[] load = currentLoad(model);
