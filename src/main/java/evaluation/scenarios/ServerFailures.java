@@ -2,7 +2,9 @@ package evaluation.scenarios;
 
 import btrplace.model.Node;
 import btrplace.model.VM;
-import btrplace.model.constraint.*;
+import btrplace.model.constraint.Offline;
+import btrplace.model.constraint.Running;
+import btrplace.model.constraint.SatConstraint;
 import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
 import btrplace.solver.choco.SolvingStatistics;
@@ -22,7 +24,6 @@ public class ServerFailures extends ReconfigurationScenario {
 
     public ServerFailures(int id) {
         modelId = id;
-        validateConstraint = new ArrayList<>();
         sb = new StringBuilder();
         failedNodes = new ArrayList<>();
         restartVMs = new ArrayList<>();
@@ -38,7 +39,7 @@ public class ServerFailures extends ReconfigurationScenario {
     @Override
     public void run() {
         readData(modelId);
-        int p = 5;
+        int p = 8;
         List<Node> nodes = new ArrayList<>(model.getMapping().getAllNodes());
         int size = p * nodes.size() / 100;
         Collections.shuffle(nodes);
@@ -69,7 +70,12 @@ public class ServerFailures extends ReconfigurationScenario {
 
     @Override
     boolean reconfigure(int p, boolean c) {
-        int[] vioTime = new int[5];
+        int DCconstraint[] = new int[2];
+        ArrayList<ArrayList<Integer>> violatedApp = new ArrayList<>();
+        HashSet<Integer> affectedApps = new HashSet<>();
+        for (int i = 0; i < 5; i++) {
+            violatedApp.add(new ArrayList<Integer>());
+        }
         boolean satisfied = true;
         Collection<SatConstraint> constraints = new ArrayList<>();
         ReconfigurationPlan plan;
@@ -92,26 +98,7 @@ public class ServerFailures extends ReconfigurationScenario {
                         System.err.println("Failed servers run again");
                     }
                 }
-
-                for (SatConstraint s : validateConstraint) {
-                    boolean continuous = s.isContinuous();
-                    if (!continuous) s.setContinuous(true);
-                    if (!s.isSatisfied(plan)) {
-                        satisfied = false;
-                        if (s instanceof Spread) {
-                            vioTime[0]++;
-                        } else if (s instanceof Among) {
-                            vioTime[1]++;
-                        } else if (s instanceof SplitAmong) {
-                            vioTime[2]++;
-                        } else if (s instanceof SingleResourceCapacity) {
-                            vioTime[3]++;
-                        } else if (s instanceof MaxOnline) {
-                            vioTime[4]++;
-                        }
-                    }
-                    s.setContinuous(continuous);
-                }
+                checkSatisfaction(plan, violatedApp, DCconstraint, affectedApps);
             }
         } catch (SolverException e) {
             sb.append(String.format("Model %d.\t%b\t%s\n", modelId, c, e.getMessage()));
@@ -123,8 +110,9 @@ public class ServerFailures extends ReconfigurationScenario {
 
         ConverterTools.planToFile(plan, String.format("%s%d%b", path, modelId, c));
 
-        sb.append(String.format("%-2d\t%b\t%-3d\t%-2d\t%d\t%d\t%d\t%d\t", modelId, c, p,
-                vioTime[0], vioTime[1], vioTime[2], vioTime[3], vioTime[4]));
+        sb.append(String.format("%-2d\t%b\t%-3d\t%-2d\t%d\t%d\t%d\t%d\t%d\t", modelId, c, p,
+                violatedApp.get(0).size(), violatedApp.get(1).size(), violatedApp.get(2).size(),
+                DCconstraint[0], DCconstraint[1], affectedApps.size()));
         float[] load = currentLoad(model);
         sb.append(String.format("%f\t%f\t", load[0], load[1]));
         load = currentLoad(plan.getResult());

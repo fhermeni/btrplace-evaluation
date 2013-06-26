@@ -13,11 +13,11 @@ import java.util.concurrent.Executors;
 public class Evaluator {
     public static void main(String[] args) {
         ExecutorService thread = Executors.newFixedThreadPool(4);
-        ReconfigurationScenario.setTimeOut(300);  // 12 hours for Server Failure scenario
+        ReconfigurationScenario.setTimeOut(60);  // 12 hours for Server Failure scenario
         ReconfigurationScenario rs;
 
         int nP = 50;
-        SType type = SType.ve;
+        SType type = SType.sf;
         switch (type) {
             case ve:
                 for (int i = 1; i <= nP; i++) {

@@ -3,7 +3,9 @@ package evaluation.generator;
 import btrplace.json.AbstractJSONObjectConverter;
 import btrplace.json.JSONArrayConverter;
 import btrplace.json.JSONConverterException;
+import btrplace.json.model.constraint.SatConstraintsConverter;
 import btrplace.model.Model;
+import btrplace.model.constraint.SatConstraint;
 import evaluation.demo.Application;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
@@ -28,21 +30,41 @@ public class ApplicationConverter extends AbstractJSONObjectConverter<Applicatio
     }
 
     @Override
-    public Application fromJSON(JSONObject in) throws JSONConverterException {
-        Application application = new Application();
-        application.setTier1(new ArrayList<>(requiredVMs(in, "tier1")));
-        application.setTier2(new ArrayList<>(requiredVMs(in, "tier2")));
-        application.setTier3(new ArrayList<>(requiredVMs(in, "tier3")));
-        return application;
-    }
-
-    @Override
     public JSONObject toJSON(Application application) throws JSONConverterException {
         JSONObject object = new JSONObject();
+        object.put("id", application.getId());
         object.put("tier1", vmsToJSON(application.getTier1()));
         object.put("tier2", vmsToJSON(application.getTier2()));
         object.put("tier3", vmsToJSON(application.getTier3()));
+        object.put("constraints", constraintsToJSON(application.getConstraints()));
         return object;
+    }
+
+    private Object constraintsToJSON(Collection<SatConstraint> constraints) throws JSONConverterException {
+        SatConstraintsConverter converter = new SatConstraintsConverter();
+        return converter.toJSON(constraints);
+    }
+
+    @Override
+    public Application fromJSON(JSONObject in) throws JSONConverterException {
+        Application application = new Application();
+        application.setId(requiredInt(in, "id"));
+        application.setTier1(new ArrayList<>(requiredVMs(in, "tier1")));
+        application.setTier2(new ArrayList<>(requiredVMs(in, "tier2")));
+        application.setTier3(new ArrayList<>(requiredVMs(in, "tier3")));
+        application.setConstraints(requiredConStraint(in, "constraints"));
+        return application;
+    }
+
+    private Collection<SatConstraint> requiredConStraint(JSONObject o, String id) throws JSONConverterException {
+        SatConstraintsConverter converter = new SatConstraintsConverter();
+        converter.setModel(getModel());
+        Object x = o.get(id);
+        if (!(x instanceof JSONArray)) {
+            throw new JSONConverterException("Set of ints expected at key '" + id + "'");
+        }
+        JSONArray x1 = (JSONArray) x;
+        return converter.listFromJSON(x1);
     }
 
     @Override

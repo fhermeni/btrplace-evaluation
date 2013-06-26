@@ -1,7 +1,9 @@
 package evaluation.scenarios;
 
 import btrplace.model.VM;
-import btrplace.model.constraint.*;
+import btrplace.model.constraint.Running;
+import btrplace.model.constraint.SatConstraint;
+import btrplace.model.constraint.Spread;
 import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
 import btrplace.solver.choco.SolvingStatistics;
@@ -17,14 +19,11 @@ import java.util.*;
  */
 public class HorizontalElasticity extends ReconfigurationScenario {
 
-    Collection<SatConstraint> validate;
     Collection<VM> cloneVMs;
 
     public HorizontalElasticity(int id) {
         modelId = id;
-        validateConstraint = new ArrayList<>();
         sb = new StringBuilder();
-        validate = new ArrayList<>();
         cloneVMs = new ArrayList<>();
         cra.setTimeLimit(TIME_OUT);
         cra.doRepair(true);
@@ -33,99 +32,6 @@ public class HorizontalElasticity extends ReconfigurationScenario {
     public static void main(String[] args) {
         HorizontalElasticity he = new HorizontalElasticity(1);
         he.run();
-    }
-
-    @Override
-    boolean reconfigure(int p, boolean c) {
-        int[] vioTime = new int[5];
-        boolean satisfied = true;
-        Collection<SatConstraint> cstrs = new ArrayList<>();
-        ReconfigurationPlan plan;
-        cstrs.add(new Running(cloneVMs));
-        validateConstraint.addAll(validate);
-        if (c) {
-            for (SatConstraint s : validateConstraint) {
-                s.setContinuous(true);
-            }
-        }
-        cstrs.addAll(validateConstraint);
-        try {
-            plan = cra.solve(model, cstrs);
-            if (plan == null) {
-                sb.append(String.format("Model %d\t %b \t No solution\n", modelId, c));
-                return false;
-            } else {
-                for (SatConstraint s : validateConstraint) {
-                    boolean continuous = s.isContinuous();
-                    if (!continuous) s.setContinuous(true);
-                    if (!s.isSatisfied(plan)) {
-                        satisfied = false;
-                        if (s instanceof Spread) {
-                            vioTime[0]++;
-                        } else if (s instanceof Among) {
-                            vioTime[1]++;
-                        } else if (s instanceof SingleResourceCapacity) {
-                            vioTime[2]++;
-                        } else if (s instanceof MaxOnline) {
-                            vioTime[3]++;
-                        }
-                    }
-                    s.setContinuous(continuous);
-                }
-            }
-        } catch (SolverException e) {
-            sb.append(String.format("Model %d.\t%b\t%s\n", modelId, c, e.getMessage()));
-            return false;
-        }
-        String path = System.getProperty("user.home") + System.getProperty("file.separator") + "plan"
-                + System.getProperty("file.separator") + "he" + System.getProperty("file.separator");
-
-        ConverterTools.planToFile(plan, String.format("%s%d%b", path, modelId, c));
-        validateConstraint.removeAll(validate);
-        sb.append(String.format("%-2d\t%b\t%-3d\t%-2d\t%d\t%d\t%d\t%d\t", modelId, c, p,
-                vioTime[0], vioTime[1], vioTime[2], vioTime[3], vioTime[4]));
-        float[] load = currentLoad(model);
-        sb.append(String.format("%f\t%f\t", load[0], load[1]));
-        load = currentLoad(plan.getResult());
-        sb.append(String.format("%f\t%f\t", load[0], load[1]));
-        SolvingStatistics statistics = cra.getSolvingStatistics();
-        sb.append(String.format("%d\t%d\t%d\n", statistics.getSolvingDuration(), plan.getDuration(), plan.getSize()));
-        return satisfied;
-    }
-
-    private void horizontalScale(Application app) {
-        Collection<VM> tmp = new ArrayList<>();
-        int id = model.getMapping().getAllVMs().size();
-        for (int i = 0; i < app.getTier1().size(); i++) {
-            VM vm = model.newVM(id++);
-            model.getMapping().addReadyVM(vm);
-            cloneVMs.add(vm);
-            tmp.add(vm);
-        }
-        app.getTier1().addAll(tmp);
-        tmp.clear();
-        validate.add(new Spread(new HashSet<>(app.getTier1())));
-        for (int i = 0; i < app.getTier2().size(); i++) {
-            VM vm = model.newVM(id++);
-            ecu.setConsumption(vm, 4);
-            ram.setConsumption(vm, 2);
-            model.getMapping().addReadyVM(vm);
-            tmp.add(vm);
-            cloneVMs.add(vm);
-        }
-        app.getTier2().addAll(tmp);
-        tmp.clear();
-        validate.add(new Spread(new HashSet<>(app.getTier2())));
-        for (int i = 0; i < app.getTier3().size(); i++) {
-            VM vm = model.newVM(id++);
-            ram.setConsumption(vm, 4);
-            model.getMapping().addReadyVM(vm);
-            tmp.add(vm);
-            cloneVMs.add(vm);
-        }
-        app.getTier3().addAll(tmp);
-        tmp.clear();
-        validate.add(new Spread(new HashSet<>(app.getTier3())));
     }
 
     @Override
@@ -143,6 +49,95 @@ public class HorizontalElasticity extends ReconfigurationScenario {
         reconfigure(p, false);
         reconfigure(p, true);
         System.out.print(this);
+    }
+
+    private void horizontalScale(Application app) {
+        for (SatConstraint s : app.getConstraints()) {
+            if (s instanceof Spread) {
+                checkMap.remove(s);
+            }
+        }
+        Collection<VM> tmp = new ArrayList<>();
+        int id = model.getMapping().getAllVMs().size();
+        for (int i = 0; i < app.getTier1().size(); i++) {
+            VM vm = model.newVM(id++);
+            model.getMapping().addReadyVM(vm);
+            cloneVMs.add(vm);
+            tmp.add(vm);
+        }
+        app.getTier1().addAll(tmp);
+        tmp.clear();
+        checkMap.put(new Spread(new HashSet<>(app.getTier1()), false), app.getId());
+        for (int i = 0; i < app.getTier2().size(); i++) {
+            VM vm = model.newVM(id++);
+            ecu.setConsumption(vm, 4);
+            ram.setConsumption(vm, 2);
+            model.getMapping().addReadyVM(vm);
+            tmp.add(vm);
+            cloneVMs.add(vm);
+        }
+        app.getTier2().addAll(tmp);
+        tmp.clear();
+        checkMap.put(new Spread(new HashSet<>(app.getTier2()), false), app.getId());
+        for (int i = 0; i < app.getTier3().size(); i++) {
+            VM vm = model.newVM(id++);
+            ram.setConsumption(vm, 4);
+            model.getMapping().addReadyVM(vm);
+            tmp.add(vm);
+            cloneVMs.add(vm);
+        }
+        app.getTier3().addAll(tmp);
+        tmp.clear();
+        checkMap.put(new Spread(new HashSet<>(app.getTier3()), false), app.getId());
+    }
+
+    @Override
+    boolean reconfigure(int p, boolean c) {
+        int DCconstraint[] = new int[2];
+        ArrayList<ArrayList<Integer>> violatedConstraints = new ArrayList<>();
+        HashSet<Integer> affectedApps = new HashSet<>();
+        for (int i = 0; i < 5; i++) {
+            violatedConstraints.add(new ArrayList<Integer>());
+        }
+        boolean satisfied = true;
+        Collection<SatConstraint> cstrs = new ArrayList<>();
+        ReconfigurationPlan plan;
+        cstrs.add(new Running(cloneVMs));
+
+
+        if (c) {
+            for (SatConstraint s : validateConstraint) {
+                s.setContinuous(true);
+            }
+        }
+
+        cstrs.addAll(validateConstraint);
+        try {
+            plan = cra.solve(model, cstrs);
+            if (plan == null) {
+                sb.append(String.format("Model %d\t %b \t No solution\n", modelId, c));
+                return false;
+            } else {
+                checkSatisfaction(plan, violatedConstraints, DCconstraint, affectedApps);
+            }
+        } catch (SolverException e) {
+            sb.append(String.format("Model %d.\t%b\t%s\n", modelId, c, e.getMessage()));
+            return false;
+        }
+        String path = System.getProperty("user.home") + System.getProperty("file.separator") + "plan"
+                + System.getProperty("file.separator") + "he" + System.getProperty("file.separator");
+
+        ConverterTools.planToFile(plan, String.format("%s%d%b", path, modelId, c));
+        sb.append(String.format("%-2d\t%b\t%-3d\t%-2d\t%d\t%d\t%d\t%d\t%d\t", modelId, c, p,
+                violatedConstraints.get(0).size(), violatedConstraints.get(1).size(), violatedConstraints.get(2).size(),
+                DCconstraint[0], DCconstraint[1], affectedApps.size()));
+        float[] load = currentLoad(model);
+        sb.append(String.format("%f\t%f\t", load[0], load[1]));
+        load = currentLoad(plan.getResult());
+        sb.append(String.format("%f\t%f\t", load[0], load[1]));
+        SolvingStatistics statistics = cra.getSolvingStatistics();
+        sb.append(String.format("%d\t%d\t%d\n", statistics.getSolvingDuration(), plan.getDuration(), plan.getSize()));
+        return satisfied;
     }
 
     @Override

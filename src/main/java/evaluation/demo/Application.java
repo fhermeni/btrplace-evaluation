@@ -8,10 +8,7 @@ import btrplace.model.constraint.SatConstraint;
 import btrplace.model.constraint.Spread;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Random;
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -21,11 +18,14 @@ import java.util.Random;
  */
 public class Application implements Serializable, Cloneable {
     private int index;
+    private int id;
     private ArrayList<VM> tier1;
     private ArrayList<VM> tier2;
     private ArrayList<VM> tier3;
     private ArrayList<VM> vms;
     private ArrayList<ArrayList<VM>> tiers;
+    private Model model;
+    private Collection<SatConstraint> constraints;
 
     public Application() {
         vms = new ArrayList<>();
@@ -33,15 +33,15 @@ public class Application implements Serializable, Cloneable {
         tier2 = new ArrayList<>();
         tier3 = new ArrayList<>();
         tiers = new ArrayList<>();
+        constraints = new ArrayList<>();
     }
 
-    public Application(Model model) {
+    public Application(Model m, int idx) {
+        this();
+        id = idx;
+        model = m;
         index = model.getMapping().getAllVMs().size();
         vms = new ArrayList<>();
-        tier1 = new ArrayList<>();
-        tier2 = new ArrayList<>();
-        tier3 = new ArrayList<>();
-        tiers = new ArrayList<>();
         tiers.add(tier1);
         tiers.add(tier2);
         tiers.add(tier3);
@@ -80,13 +80,68 @@ public class Application implements Serializable, Cloneable {
         }
     }
 
+    public Application(Application origin) {
+        this();
+        id = origin.getId();
+        model = origin.getModel();
+        index = model.getMapping().getAllVMs().size();
+        vms = new ArrayList<>();
+        tiers.add(tier1);
+        tiers.add(tier2);
+        tiers.add(tier3);
+
+        for (int i = 0; i < 3; i++) {
+            switch (i) {
+                case 0:
+                    for (int j = 0; j < origin.getTier1().size(); j++) {
+                        VM vm = model.newVM(index++);
+                        model.getMapping().addReadyVM(vm);
+                        tiers.get(i).add(vm);
+                        vms.add(vm);
+                    }
+                    break;
+
+                case 1:
+                    for (int j = 0; j < origin.getTier2().size(); j++) {
+                        VM vm = model.newVM(index++);
+                        model.getMapping().addReadyVM(vm);
+                        tiers.get(i).add(vm);
+                        vms.add(vm);
+                    }
+                    break;
+
+                default:
+                    for (int j = 0; j < origin.getTier3().size(); j++) {
+                        VM vm = model.newVM(index++);
+                        model.getMapping().addReadyVM(vm);
+                        tiers.get(i).add(vm);
+                        vms.add(vm);
+                    }
+            }
+
+        }
+    }
+
+    public Collection<SatConstraint> getConstraints() {
+        return constraints;
+    }
+
+    public void setConstraints(Collection<SatConstraint> constraints) {
+        this.constraints = constraints;
+    }
+
     public Collection<SatConstraint> spread(boolean cont) {
         Collection<SatConstraint> spreads = new ArrayList<>(3);
         for (ArrayList<VM> t : tiers) {
             Spread spread = new Spread(new HashSet<>(t), cont);
             spreads.add(spread);
         }
+        constraints.addAll(spreads);
         return spreads;
+    }
+
+    public void addConstraint(SatConstraint... constraints) {
+        Collections.addAll(this.constraints, constraints);
     }
 
     public Collection<SatConstraint> gather(boolean cont) {
@@ -104,6 +159,10 @@ public class Application implements Serializable, Cloneable {
 
     public SatConstraint lonely(boolean cont) {
         return new Lonely(new HashSet<>(vms), cont);
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public void setTier1(ArrayList<VM> tier1) {
@@ -138,6 +197,14 @@ public class Application implements Serializable, Cloneable {
         return vms;
     }
 
+    public Model getModel() {
+        return model;
+    }
+
+    public int getId() {
+        return id;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -151,15 +218,17 @@ public class Application implements Serializable, Cloneable {
             return false;
         }
         Application a2 = (Application) other;
-        if (!tier1.containsAll(a2.getTier1())) {
+        if (id != a2.getId())
             return false;
-        }
-        if (!tier2.containsAll(a2.getTier2())) {
+        else if (!tier1.containsAll(a2.getTier1())) {
             return false;
-        }
-        if (!tier3.containsAll(a2.getTier3())) {
+        } else if (!tier2.containsAll(a2.getTier2())) {
+            return false;
+        } else if (!tier3.containsAll(a2.getTier3())) {
             return false;
         }
         return true;
     }
+
+
 }

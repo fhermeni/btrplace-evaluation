@@ -216,8 +216,8 @@ public class TestBtrPlace {
         groups.add(group1);
         groups.add(group2);
 
-        Application app1 = new Application(model);
-        Application app2 = new Application(model);
+        Application app1 = new Application(model, 0);
+        Application app2 = new Application(model, 1);
         vms.add(app1.getAllVM());
         vms.add(app2.getAllVM());
         SplitAmong splitAmong = new SplitAmong(vms, groups);
@@ -226,8 +226,8 @@ public class TestBtrPlace {
         constraints.add(new Running(app2.getAllVM()));
         constraints.add(splitAmong);
 
-        for (int i = 0; i < 450; i++) {
-            Application app = new Application(model);
+        for (int i = 2; i < 450; i++) {
+            Application app = new Application(model, i);
             constraints.add(new Running(app.getAllVM()));
         }
         SingleResourceCapacity SReC = new SingleResourceCapacity(model.getNodes(), "cpu", 30);
@@ -279,8 +279,8 @@ public class TestBtrPlace {
         groups.add(group1);
         groups.add(group2);
 
-        Application app1 = new Application(model);
-        Application app2 = new Application(model);
+        Application app1 = new Application(model, 0);
+        Application app2 = new Application(model, 1);
         vms.add(app1.getAllVM());
         vms.add(app2.getAllVM());
         SplitAmong splitAmong = new SplitAmong(vms, groups);
@@ -289,8 +289,8 @@ public class TestBtrPlace {
         constraints.add(new Running(app2.getAllVM()));
         constraints.add(splitAmong);
 
-        for (int i = 0; i < 400; i++) {
-            Application app = new Application(model);
+        for (int i = 2; i < 400; i++) {
+            Application app = new Application(model, i);
             constraints.add(new Running(app.getAllVM()));
         }
         SingleResourceCapacity SReC = new SingleResourceCapacity(model.getNodes(), "cpu", 60);

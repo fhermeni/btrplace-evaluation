@@ -25,6 +25,7 @@ public class ModelMaker implements Runnable {
 
 
     final static int NUM_RACK = 16;
+    final static int NUM_APP = 400;
     final static int NODES_PER_RACK = 16;
     Model model;
     boolean restriction;
@@ -74,7 +75,7 @@ public class ModelMaker implements Runnable {
             for (int i = 0; i < NODES_PER_RACK; i++) {
                 Node node = model.newNode();
                 ns.add(node);
-                if(i == NODES_PER_RACK-1)
+                if (i == NODES_PER_RACK - 1)
                     model.getMapping().addOfflineNode(node);
                 else model.getMapping().addOnlineNode(node);
             }
@@ -93,17 +94,11 @@ public class ModelMaker implements Runnable {
         Collection<SatConstraint> constraints = new ArrayList<>();
 
         try {
-            Collection<Application> tmp = new ArrayList<>();
-            for (int i = 0; i < 400; i++) {
-                Application app = new Application(model);
+            for (int i = 0; i < NUM_APP; i++) {
+                Application app = new Application(model, i);
                 runApplication(app, constraints);
-                tmp.add(app);
-                validateConstraint.addAll(app.spread(restriction));
-                Among among = new Among(app.getTier3(), racks, restriction);
-                validateConstraint.add(among);
+                if (i % 4 == 0) makeHA(app, constraints);
             }
-            addSplitAmong(constraints);
-//            runApplicationLonely(new Application(model), constraints);
             SingleResourceCapacity SReC = new SingleResourceCapacity(model.getNodes(), "ecu", 60, restriction);
             SingleResourceCapacity SReC2 = new SingleResourceCapacity(model.getNodes(), "ram", 120, restriction);
             MaxOnline maxOnline = new MaxOnline(model.getNodes(), 240, restriction);
@@ -114,7 +109,6 @@ public class ModelMaker implements Runnable {
             plan = cra.solve(model, constraints);
             if (plan != null) {
                 model = plan.getResult();
-                appList.addAll(tmp);
             }
         } catch (SolverException e) {
             e.printStackTrace();
@@ -122,6 +116,40 @@ public class ModelMaker implements Runnable {
             return false;
         }
         return true;
+    }
+
+    private void runApplication(Application app, Collection<SatConstraint> constraints) {
+        appList.add(app);
+        for (VM vm : app.getTier2()) {
+            ecu.setConsumption(vm, 4);
+            ram.setConsumption(vm, 2);
+        }
+
+        for (VM vm : app.getTier3()) {
+            ram.setConsumption(vm, 4);
+        }
+        Running run = new Running(app.getAllVM());
+        constraints.add(run);
+        Collection<SatConstraint> spread = app.spread(restriction);
+        validateConstraint.addAll(spread);
+        Among among = new Among(app.getTier3(), racks, restriction);
+        app.addConstraint(among);
+        validateConstraint.add(among);
+//        System.out.println("Among appID:" + app.getId());
+    }
+
+    private void makeHA(Application app, Collection<SatConstraint> constraints) {
+        Collection<Collection<VM>> vms = new ArrayList<>();
+        Application clone = new Application(app);
+        runApplication(clone, constraints);
+
+        vms.add(app.getAllVM());
+        vms.add(clone.getAllVM());
+
+        SplitAmong splitAmong = new SplitAmong(vms, groups);
+        app.addConstraint(splitAmong);
+        validateConstraint.add(splitAmong);
+//        System.out.println("HA:" + app.getId() + "\t" + clone.getId());
     }
 
     private float[] currentLoad() {
@@ -140,19 +168,6 @@ public class ModelMaker implements Runnable {
         return loads;
     }
 
-    private void runApplication(Application app, Collection<SatConstraint> constraints) {
-        for (VM vm : app.getTier2()) {
-            ecu.setConsumption(vm, 4);
-            ram.setConsumption(vm, 2);
-        }
-
-        for (VM vm : app.getTier3()) {
-            ram.setConsumption(vm, 4);
-        }
-        Running run = new Running(app.getAllVM());
-        constraints.add(run);
-    }
-
     private void runApplicationLonely(Application app, Collection<SatConstraint> constraints) {
         for (VM vm : app.getTier2()) {
             ecu.setConsumption(vm, 4);
@@ -169,7 +184,7 @@ public class ModelMaker implements Runnable {
     }
 
 
-    private void addSplitAmong(Collection<SatConstraint> constraints) {
+/*    private void addSplitAmong(Collection<SatConstraint> constraints) {
         Collection<Collection<VM>> vms = new ArrayList<>();
         Application app1 = new Application(model);
         Application app2 = new Application(model);
@@ -180,15 +195,17 @@ public class ModelMaker implements Runnable {
         SplitAmong splitAmong = new SplitAmong(vms, groups);
         constraints.add(splitAmong);
         validateConstraint.add(splitAmong);
-    }
+    }*/
 
     private void storeModel(boolean store) {
         if (store) {
             String path = System.getProperty("user.home") + System.getProperty("file.separator") + "model"
                     + System.getProperty("file.separator");
             ConverterTools.modelToFile(model, path + "model" + modelId + ".json");
-            ConverterTools.constraintsToFile(validateConstraint, path + "constraints" + modelId + ".json");
+//            ConverterTools.constraintsToFile(validateConstraint, path + "constraints" + modelId + ".json");
             ConverterTools.applicationsToFile(model, appList, path + "applications" + modelId + ".json");
+
+
         }
     }
 }
