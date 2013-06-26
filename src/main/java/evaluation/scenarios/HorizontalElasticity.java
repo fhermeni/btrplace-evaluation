@@ -6,9 +6,7 @@ import btrplace.model.constraint.SatConstraint;
 import btrplace.model.constraint.Spread;
 import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
-import btrplace.solver.choco.SolvingStatistics;
 import evaluation.demo.Application;
-import evaluation.generator.ConverterTools;
 
 import java.util.*;
 
@@ -22,15 +20,14 @@ public class HorizontalElasticity extends ReconfigurationScenario {
     Collection<VM> cloneVMs;
 
     public HorizontalElasticity(int id) {
-        modelId = id;
-        sb = new StringBuilder();
+        super(id);
         cloneVMs = new ArrayList<>();
-        cra.setTimeLimit(TIME_OUT);
-        cra.doRepair(true);
+        rp_type = "horizontal";
     }
 
     public static void main(String[] args) {
         HorizontalElasticity he = new HorizontalElasticity(1);
+        he.findContinuous();
         he.run();
     }
 
@@ -38,7 +35,7 @@ public class HorizontalElasticity extends ReconfigurationScenario {
     public void run() {
         readData(modelId);
         Collections.shuffle((new ArrayList<>(applications)));
-        int p = 20;
+        int p = 10;
         int size = applications.size() * p / 100;
         Iterator<Application> iterator = applications.iterator();
         while (size > 0 && iterator.hasNext()) {
@@ -47,7 +44,10 @@ public class HorizontalElasticity extends ReconfigurationScenario {
             size--;
         }
         reconfigure(p, false);
-        reconfigure(p, true);
+        if(findContinuous)
+            reconfigure(p, true);
+        else
+            reconfigure(p, false);
         System.out.print(this);
     }
 
@@ -124,19 +124,7 @@ public class HorizontalElasticity extends ReconfigurationScenario {
             sb.append(String.format("Model %d.\t%b\t%s\n", modelId, c, e.getMessage()));
             return false;
         }
-        String path = System.getProperty("user.home") + System.getProperty("file.separator") + "plan"
-                + System.getProperty("file.separator") + "he" + System.getProperty("file.separator");
-
-        ConverterTools.planToFile(plan, String.format("%s%d%b", path, modelId, c));
-        sb.append(String.format("%-2d\t%b\t%-3d\t%-2d\t%d\t%d\t%d\t%d\t%d\t", modelId, c, p,
-                violatedConstraints.get(0).size(), violatedConstraints.get(1).size(), violatedConstraints.get(2).size(),
-                DCconstraint[0], DCconstraint[1], affectedApps.size()));
-        float[] load = currentLoad(model);
-        sb.append(String.format("%f\t%f\t", load[0], load[1]));
-        load = currentLoad(plan.getResult());
-        sb.append(String.format("%f\t%f\t", load[0], load[1]));
-        SolvingStatistics statistics = cra.getSolvingStatistics();
-        sb.append(String.format("%d\t%d\t%d\n", statistics.getSolvingDuration(), plan.getDuration(), plan.getSize()));
+        result(plan, c, p, violatedConstraints, DCconstraint, affectedApps);
         return satisfied;
     }
 

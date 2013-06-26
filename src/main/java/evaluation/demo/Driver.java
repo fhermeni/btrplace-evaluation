@@ -13,7 +13,7 @@ public class Driver {
     public static void main(String[] args) {
         ExecutorService thread = Executors.newFixedThreadPool(4);
 
-        int nP = 50;
+        int nP = 4;
 
         for (int i = 1; i <= nP; i++) {
 //            ReconfigurationScenario rs = new HorizontalElasticity(i);

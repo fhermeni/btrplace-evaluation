@@ -9,6 +9,7 @@ import btrplace.model.view.ShareableResource;
 import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.choco.ChocoReconfigurationAlgorithm;
 import btrplace.solver.choco.DefaultChocoReconfigurationAlgorithm;
+import btrplace.solver.choco.SolvingStatistics;
 import btrplace.solver.choco.constraint.CMaxOnlines;
 import evaluation.demo.Application;
 import evaluation.generator.ConverterTools;
@@ -23,6 +24,7 @@ import java.util.*;
 public abstract class ReconfigurationScenario implements Runnable {
 
     static int TIME_OUT = 300;
+    protected static boolean findContinuous = false;
     int modelId;
     Model model;
     Set<SatConstraint> validateConstraint;
@@ -32,7 +34,34 @@ public abstract class ReconfigurationScenario implements Runnable {
     StringBuilder sb;
     ShareableResource ecu;
     ShareableResource ram;
+    String rp_type;
 
+    public ReconfigurationScenario(int id) {
+        modelId = id;
+        sb = new StringBuilder();
+        cra.setTimeLimit(TIME_OUT);
+        cra.doRepair(true);
+    }
+
+    public static float[] currentLoad(Model measure_model) {
+        float[] loads = new float[2];
+        Mapping mapping = measure_model.getMapping();
+        Set<Node> onlineNodes = mapping.getOnlineNodes();
+        Set<VM> runningVMs = mapping.getRunningVMs();
+        ShareableResource sr = (ShareableResource) measure_model.getView("ShareableResource.ecu");
+        ShareableResource sr2 = (ShareableResource) measure_model.getView("ShareableResource.ram");
+        float capacity = sr.sumCapacities(onlineNodes, true);
+        float used = sr.sumConsumptions(runningVMs, true);
+        loads[0] = used / capacity * 100;
+        capacity = sr2.sumCapacities(onlineNodes, true);
+        used = sr2.sumConsumptions(runningVMs, true);
+        loads[1] = used / capacity * 100;
+        return loads;
+    }
+
+    public static void setTimeOut(int timeout) {
+        TIME_OUT = timeout;
+    }
 
     abstract boolean reconfigure(int p, boolean c);
 
@@ -51,23 +80,15 @@ public abstract class ReconfigurationScenario implements Runnable {
                 checkMap.put(s, a.getId());
             }
         }
+        Set<Node> allNodes = model.getMapping().getAllNodes();
+//        System.out.println("Node size:" + allNodes.size());
+        SingleResourceCapacity SReC = new SingleResourceCapacity(allNodes, "ecu", 60, false);
+        SingleResourceCapacity SReC2 = new SingleResourceCapacity(allNodes, "ram", 120, false);
+        MaxOnline maxOnline = new MaxOnline(allNodes, 240, false);
+        checkMap.put(SReC, 1000);
+        checkMap.put(SReC2, 1000);
+        checkMap.put(maxOnline, 1000);
         validateConstraint = checkMap.keySet();
-    }
-
-    public static float[] currentLoad(Model measure_model) {
-        float[] loads = new float[2];
-        Mapping mapping = measure_model.getMapping();
-        Set<Node> onlineNodes = mapping.getOnlineNodes();
-        Set<VM> runningVMs = mapping.getRunningVMs();
-        ShareableResource sr = (ShareableResource) measure_model.getView("ShareableResource.ecu");
-        ShareableResource sr2 = (ShareableResource) measure_model.getView("ShareableResource.ram");
-        float capacity = sr.sumCapacities(onlineNodes, true);
-        float used = sr.sumConsumptions(runningVMs, true);
-        loads[0] = used / capacity * 100;
-        capacity = sr2.sumCapacities(onlineNodes, true);
-        used = sr2.sumConsumptions(runningVMs, true);
-        loads[1] = used / capacity * 100;
-        return loads;
     }
 
     public void checkSatisfaction(ReconfigurationPlan plan, ArrayList<ArrayList<Integer>> constr,
@@ -96,7 +117,39 @@ public abstract class ReconfigurationScenario implements Runnable {
         }
     }
 
-    public static void setTimeOut(int timeout) {
-        TIME_OUT = timeout;
+    public static void findContinuous() {
+        findContinuous = true;
     }
+
+    public void viewConstraints(Collection<SatConstraint> constraints) {
+        int spread = 0, among = 0, splita = 0, srec = 0, max = 0;
+
+        for (SatConstraint constraint : constraints) {
+            if (constraint instanceof Spread) spread++;
+            if (constraint instanceof Among) among++;
+            if (constraint instanceof SplitAmong) splita++;
+            if (constraint instanceof SingleResourceCapacity) srec++;
+
+            if (constraint instanceof MaxOnline) max++;
+        }
+        System.out.printf("%d\t%d\t%d\t%d\t%d\n", spread, among, splita, srec, max);
+    }
+
+    public void result(ReconfigurationPlan plan, boolean c, int p, ArrayList<ArrayList<Integer>> vc,
+                       int[] dc, HashSet<Integer> app) {
+        String separator = System.getProperty("file.separator");
+        String path = System.getProperty("user.home") + separator + "newEvaluation/plan"
+                + separator + rp_type + separator;
+        ConverterTools.planToFile(plan, String.format("%splan%d%b.json", path, modelId, c));
+        sb.append(String.format("%b\t%d\t%d\t", c, modelId, p));
+        sb.append(String.format("%d\t%d\t%d\t", vc.get(0).size(), vc.get(1).size(), vc.get(2).size()));
+        sb.append(String.format("%d\t%d\t%d", dc[0], dc[1], app.size()));
+        float[] load = currentLoad(model);
+        sb.append(String.format("%f\t%f\t", load[0], load[1]));
+        load = currentLoad(plan.getResult());
+        sb.append(String.format("%f\t%f\t", load[0], load[1]));
+        SolvingStatistics statistics = cra.getSolvingStatistics();
+        sb.append(String.format("%d\t%d\t%d\n", statistics.getSolvingDuration(), plan.getDuration(), plan.getSize()));
+    }
+
 }

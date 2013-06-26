@@ -20,9 +20,9 @@ public class PlanReader {
     }
 
     public static void main(String[] args) {
-        String path = System.getProperty("user.home") + System.getProperty("file.separator") + "plan/he"
+        String path = System.getProperty("user.home") + System.getProperty("file.separator") + "plan/sf"
                 + System.getProperty("file.separator");
-        PlanReader pr = new PlanReader(path + "1true");
+        PlanReader pr = new PlanReader(path + "4false");
         pr.read();
 
 

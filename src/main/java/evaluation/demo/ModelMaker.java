@@ -25,7 +25,7 @@ public class ModelMaker implements Runnable {
 
 
     final static int NUM_RACK = 16;
-    final static int NUM_APP = 400;
+    final static int NUM_APP = 350;
     final static int NODES_PER_RACK = 16;
     Model model;
     boolean restriction;
@@ -83,6 +83,7 @@ public class ModelMaker implements Runnable {
             if (j < 8) group1.addAll(ns);
             else group2.addAll(ns);
         }
+//        System.out.println("size: " + model.getNodes().size());
 
         groups.add(group1);
         groups.add(group2);

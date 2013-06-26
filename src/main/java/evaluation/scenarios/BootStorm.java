@@ -6,8 +6,6 @@ import btrplace.model.constraint.Running;
 import btrplace.model.constraint.SatConstraint;
 import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
-import btrplace.solver.choco.SolvingStatistics;
-import evaluation.generator.ConverterTools;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,10 +19,8 @@ import java.util.HashSet;
 public class BootStorm extends ReconfigurationScenario {
 
     public BootStorm(int id) {
-        modelId = id;
-        sb = new StringBuilder();
-        cra.setTimeLimit(TIME_OUT);
-        cra.doRepair(true);
+        super(id);
+        rp_type = "storm";
     }
 
     public static void main(String[] args) {
@@ -35,19 +31,22 @@ public class BootStorm extends ReconfigurationScenario {
     @Override
     public void run() {
         readData(modelId);
-        int p = 400;
+        int p = 200;
         reconfigure(p, false);
-        reconfigure(p, true);
+        if(findContinuous)
+            reconfigure(p, true);
+        else
+            reconfigure(p, false);
         System.out.print(this);
     }
 
     @Override
     public boolean reconfigure(int p, boolean c) {
         int DCconstraint[] = new int[2];
-        ArrayList<ArrayList<Integer>> violatedApp = new ArrayList<>();
+        ArrayList<ArrayList<Integer>> violatedConstraints = new ArrayList<>();
         HashSet<Integer> affectedApps = new HashSet<>();
         for (int i = 0; i < 5; i++) {
-            violatedApp.add(new ArrayList<Integer>());
+            violatedConstraints.add(new ArrayList<Integer>());
         }
         boolean satisfied = true;
         int currentVmId = model.getMapping().getAllVMs().size();
@@ -86,26 +85,13 @@ public class BootStorm extends ReconfigurationScenario {
                 sb.append(String.format("Model %d\t %b \t No solution\n", modelId, c));
                 return false;
             } else {
-                checkSatisfaction(plan, violatedApp, DCconstraint, affectedApps);
+                checkSatisfaction(plan, violatedConstraints, DCconstraint, affectedApps);
             }
         } catch (SolverException e) {
             sb.append(String.format("Model %d.\t%b\t%s\n", modelId, c, e.getMessage()));
             return false;
         }
-        String path = System.getProperty("user.home") + System.getProperty("file.separator") + "plan"
-                + System.getProperty("file.separator") + "bs" + System.getProperty("file.separator");
-
-        ConverterTools.planToFile(plan, String.format("%s%d%b", path, modelId, c));
-
-        sb.append(String.format("%-2d\t%b\t%-3d\t%-2d\t%d\t%d\t%d\t%d\t%d\t", modelId, c, p,
-                violatedApp.get(0).size(), violatedApp.get(1).size(), violatedApp.get(2).size(),
-                DCconstraint[0], DCconstraint[1], affectedApps.size()));
-        float[] load = currentLoad(model);
-        sb.append(String.format("%f\t%f\t", load[0], load[1]));
-        load = currentLoad(plan.getResult());
-        sb.append(String.format("%f\t%f\t", load[0], load[1]));
-        SolvingStatistics statistics = cra.getSolvingStatistics();
-        sb.append(String.format("%d\t%d\t%d\n", statistics.getSolvingDuration(), plan.getDuration(), plan.getSize()));
+        result(plan, c, p, violatedConstraints, DCconstraint, affectedApps);
         return satisfied;
     }
 
