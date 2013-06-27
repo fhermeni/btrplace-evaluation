@@ -143,7 +143,7 @@ public abstract class ReconfigurationScenario implements Runnable {
         ConverterTools.planToFile(plan, String.format("%splan%d%b.json", path, modelId, c));
         sb.append(String.format("%b\t%d\t%d\t", c, modelId, p));
         sb.append(String.format("%d\t%d\t%d\t", vc.get(0).size(), vc.get(1).size(), vc.get(2).size()));
-        sb.append(String.format("%d\t%d\t%d", dc[0], dc[1], app.size()));
+        sb.append(String.format("%d\t%d\t%d\t", dc[0], dc[1], app.size()));
         float[] load = currentLoad(model);
         sb.append(String.format("%f\t%f\t", load[0], load[1]));
         load = currentLoad(plan.getResult());

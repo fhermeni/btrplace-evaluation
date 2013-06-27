@@ -32,8 +32,7 @@ public class BootStorm extends ReconfigurationScenario {
     public void run() {
         readData(modelId);
         int p = 200;
-        reconfigure(p, false);
-        if(findContinuous)
+        if (findContinuous)
             reconfigure(p, true);
         else
             reconfigure(p, false);

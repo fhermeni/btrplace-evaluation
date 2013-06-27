@@ -43,8 +43,7 @@ public class HorizontalElasticity extends ReconfigurationScenario {
             horizontalScale(app);
             size--;
         }
-        reconfigure(p, false);
-        if(findContinuous)
+        if (findContinuous)
             reconfigure(p, true);
         else
             reconfigure(p, false);

@@ -111,13 +111,15 @@ public class TestBtrPlace {
     @Test
     public void testOverbook() throws SolverException {
         Model model = new DefaultModel();
-        ShareableResource cpu = new ShareableResource("cpu", 8, 1);
+        ShareableResource cpu = new ShareableResource("cpu", 32, 1);
         model.attach(cpu);
-        model.getMapping().addOnlineNode(model.newNode());
-        model.getMapping().addOnlineNode(model.newNode());
 
+        int NODE = 100;
+        for (int i = 0; i < NODE; i++) {
+            model.getMapping().addOnlineNode(model.newNode());
+        }
         Collection<VM> vms = new ArrayList<>();
-        for (int i = 0; i < 64; i++) {
+        for (int i = 0; i < 32 * NODE; i++) {
             VM e = model.newVM();
             vms.add(e);
             model.getMapping().addReadyVM(e);
@@ -125,12 +127,13 @@ public class TestBtrPlace {
         Running run = new Running(vms);
         Overbook overbook = new Overbook(model.getNodes(), "cpu", 4);
         Collection<SatConstraint> VMconstraints = new ArrayList<>();
-        VMconstraints.add(overbook);
+        //VMconstraints.add(overbook);
         VMconstraints.add(run);
         ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
         ReconfigurationPlan plan = cra.solve(model, VMconstraints);
         Assert.assertNotNull(plan);
-        System.out.println(plan.getResult().getMapping());
+        System.out.println(cra.getSolvingStatistics());
+//      /  System.out.println(plan.getResult().getMapping());
         Mapping mapping = plan.getResult().getMapping();
         Set<Node> onlineNodes = mapping.getOnlineNodes();
         Set<VM> runningVMs = mapping.getRunningVMs();
@@ -152,11 +155,11 @@ public class TestBtrPlace {
 //        ShareableResource ram = new ShareableResource("ram", 128, 1);
         model.attach(cpu);
         model.attach(ram);
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 64; i++) {
             Node n = model.newNode();
             model.getMapping().addOnlineNode(n);
         }
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 500; i++) {
             VM vm = model.newVM();
             model.getMapping().addReadyVM(vm);
         }
@@ -309,5 +312,31 @@ public class TestBtrPlace {
             e.printStackTrace();
         }
         Assert.assertNotNull(solve);
+    }
+
+    @Test
+    public void testNewVM() {
+        Model model = new DefaultModel();
+        VM vm = model.newVM();
+        model.getMapping().addReadyVM(vm);
+        Assert.assertNotEquals(vm.id(), createNewVm(model).id());
+        Assert.assertEquals(model.getVMs().size(), 2);
+        Node node = model.newNode();
+        model.getMapping().addOfflineNode(node);
+        Assert.assertNotEquals(node.id(), createNewNode(model).id());
+        Assert.assertEquals(model.getMapping().getAllNodes().size(), 2);
+        Assert.assertEquals(model.getMapping().getAllVMs().size(), 2);
+    }
+
+    public VM createNewVm(Model model) {
+        VM vm = model.newVM();
+        model.getMapping().addReadyVM(vm);
+        return vm;
+    }
+
+    public Node createNewNode(Model model) {
+        Node node = model.newNode();
+        model.getMapping().addOnlineNode(node);
+        return node;
     }
 }

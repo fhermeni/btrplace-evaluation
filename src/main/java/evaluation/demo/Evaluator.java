@@ -12,41 +12,40 @@ import java.util.concurrent.Executors;
  */
 public class Evaluator {
     public static void main(String[] args) {
-        ExecutorService thread = Executors.newFixedThreadPool(2);
-        ReconfigurationScenario.setTimeOut(20);  // 12 hours for Server Failure scenario
+        ExecutorService thread = Executors.newFixedThreadPool(4);
+        ReconfigurationScenario.setTimeOut(60);  // 12 hours for Server Failure scenario
         ReconfigurationScenario.findContinuous();
         ReconfigurationScenario rs;
 
-        int nP = 4;
-        SType[] type = {SType.ve, SType.he, SType.sf ,SType.bs};
+        int nP = 100;
+//        SType[] type = {SType.ve, SType.he, SType.sf ,SType.bs};
+        SType type = SType.sf;
 
-        for (int j = 0; j < 4; j++) {
-            switch (type[j]) {
-                case ve:
-                    for (int i = 1; i <= nP; i++) {
-                        rs = new VerticalElasticity(i);
-                        thread.execute(rs);
-                    }
-                    break;
-                case he:
-                    for (int i = 1; i <= nP; i++) {
-                        rs = new HorizontalElasticity(i);
-                        thread.execute(rs);
-                    }
-                    break;
-                case sf:
-                    for (int i = 1; i <= nP; i++) {
-                        rs = new ServerFailures(i);
-                        thread.execute(rs);
-                    }
-                    break;
-                case bs:
-                    for (int i = 1; i <= nP; i++) {
-                        rs = new BootStorm(i);
-                        thread.execute(rs);
-                    }
-                    break;
-            }
+        switch (type) {
+            case ve:
+                for (int i = 1; i <= nP; i++) {
+                    rs = new VerticalElasticity(i);
+                    thread.execute(rs);
+                }
+                break;
+            case he:
+                for (int i = 1; i <= nP; i++) {
+                    rs = new HorizontalElasticity(i);
+                    thread.execute(rs);
+                }
+                break;
+            case sf:
+                for (int i = 1; i <= nP; i++) {
+                    rs = new ServerFailures(i);
+                    thread.execute(rs);
+                }
+                break;
+            case bs:
+                for (int i = 1; i <= nP; i++) {
+                    rs = new BootStorm(i);
+                    thread.execute(rs);
+                }
+                break;
         }
 
         thread.shutdown();
