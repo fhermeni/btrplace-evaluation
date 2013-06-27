@@ -19,7 +19,7 @@ public class Evaluator {
 
         int nP = 100;
 //        SType[] type = {SType.ve, SType.he, SType.sf ,SType.bs};
-        SType type = SType.cr;
+        SType type = SType.valueOf(args[0]);
 
         switch (type) {
             case ve:
@@ -43,12 +43,6 @@ public class Evaluator {
             case bs:
                 for (int i = 1; i <= nP; i++) {
                     rs = new BootStorm(i);
-                    thread.execute(rs);
-                }
-                break;
-            case cr:
-                for (int i = 1; i <= nP; i++) {
-                    rs = new ConsolidationRate(i);
                     thread.execute(rs);
                 }
                 break;

@@ -23,10 +23,8 @@ public class PlanReader {
     }
 
     public static void main(String[] args) {
-        String path = System.getProperty("user.home") + System.getProperty("file.separator") + "newEvaluation/plan/storm"
-                + System.getProperty("file.separator");
         for (int i = 1; i <= 100; i++) {
-            PlanReader pr = new PlanReader(String.format("%splan%dfalse.json", path, i));
+            PlanReader pr = new PlanReader(String.format("%splan%d%s.json", args[0], i, args[1]));
             pr.read();
         }
 

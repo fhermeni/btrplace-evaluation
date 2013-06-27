@@ -314,31 +314,6 @@ public class TestBtrPlace {
         Assert.assertNotNull(solve);
     }
 
-    @Test
-    public void testNewVM() {
-        Model model = new DefaultModel();
-        VM vm = model.newVM();
-        model.getMapping().addReadyVM(vm);
-        Assert.assertNotEquals(vm.id(), createNewVm(model).id());
-        Assert.assertEquals(model.getVMs().size(), 2);
-        Node node = model.newNode();
-        model.getMapping().addOfflineNode(node);
-        Assert.assertNotEquals(node.id(), createNewNode(model).id());
-        Assert.assertEquals(model.getMapping().getAllNodes().size(), 2);
-        Assert.assertEquals(model.getMapping().getAllVMs().size(), 2);
-    }
-
-    public VM createNewVm(Model model) {
-        VM vm = model.newVM();
-        model.getMapping().addReadyVM(vm);
-        return vm;
-    }
-
-    public Node createNewNode(Model model) {
-        Node node = model.newNode();
-        model.getMapping().addOnlineNode(node);
-        return node;
-    }
 
     @Test
     public void testArays() {
