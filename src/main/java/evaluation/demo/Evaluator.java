@@ -12,14 +12,14 @@ import java.util.concurrent.Executors;
  */
 public class Evaluator {
     public static void main(String[] args) {
-        ExecutorService thread = Executors.newFixedThreadPool(4);
+        ExecutorService thread = Executors.newFixedThreadPool(1);
         ReconfigurationScenario.setTimeOut(60);  // 12 hours for Server Failure scenario
         ReconfigurationScenario.findContinuous();
         ReconfigurationScenario rs;
 
         int nP = 100;
 //        SType[] type = {SType.ve, SType.he, SType.sf ,SType.bs};
-        SType type = SType.sf;
+        SType type = SType.cr;
 
         switch (type) {
             case ve:
@@ -46,12 +46,18 @@ public class Evaluator {
                     thread.execute(rs);
                 }
                 break;
+            case cr:
+                for (int i = 1; i <= nP; i++) {
+                    rs = new ConsolidationRate(i);
+                    thread.execute(rs);
+                }
+                break;
         }
 
         thread.shutdown();
     }
 
     enum SType {
-        ve, he, sf, bs
+        ve, he, sf, bs, cr
     }
 }
