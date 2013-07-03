@@ -5,6 +5,9 @@ import btrplace.json.plan.ReconfigurationPlanConverter;
 import btrplace.model.Node;
 import btrplace.plan.ReconfigurationPlan;
 import btrplace.plan.event.Action;
+import btrplace.plan.event.Allocate;
+import btrplace.plan.event.BootVM;
+import btrplace.plan.event.MigrateVM;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,9 +39,10 @@ public class PlanReader {
 
         try {
             ReconfigurationPlan plan = converter.fromJSON(new File(filename));
+            double[] act_types = countActions(plan);
+            System.out.printf("%f\t%f\t%f\n", act_types[0], act_types[1], act_types[2]);
 
-
-            levelDependency(plan);
+//            levelDependency(plan);
 
 //            System.out.println(calculateAverage(plan));
 //            System.out.println(plan);
@@ -81,6 +85,19 @@ public class PlanReader {
             return sum.doubleValue() / marks.size();
         }
         return sum;
+    }
+
+    private double[] countActions(ReconfigurationPlan plan) {
+        double[] count = new double[3];
+        for (Action a : plan) {
+            if (a instanceof BootVM) count[0]++;
+            else if (a instanceof MigrateVM) count[1]++;
+            else if (a instanceof Allocate) count[2]++;
+        }
+        count[0] = count[0] / plan.getSize();
+        count[1] = count[1] / plan.getSize();
+        count[2] = count[2] / plan.getSize();
+        return count;
     }
 
 }
