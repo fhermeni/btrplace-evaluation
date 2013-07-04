@@ -31,7 +31,7 @@ public class BootStorm extends ReconfigurationScenario {
     @Override
     public void run() {
         readData(modelId);
-        int p = 200;
+        int p = 400;
         if (findContinuous)
             reconfigure(p, true);
         else

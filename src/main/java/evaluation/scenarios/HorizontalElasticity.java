@@ -27,7 +27,7 @@ public class HorizontalElasticity extends ReconfigurationScenario {
 
     public static void main(String[] args) {
         HorizontalElasticity he = new HorizontalElasticity(1);
-        he.findContinuous();
+//        he.findContinuous();
         he.run();
     }
 
@@ -35,7 +35,7 @@ public class HorizontalElasticity extends ReconfigurationScenario {
     public void run() {
         readData(modelId);
         Collections.shuffle((new ArrayList<>(applications)));
-        int p = 10;
+        int p = 25;
         int size = applications.size() * p / 100;
         Iterator<Application> iterator = applications.iterator();
         while (size > 0 && iterator.hasNext()) {
