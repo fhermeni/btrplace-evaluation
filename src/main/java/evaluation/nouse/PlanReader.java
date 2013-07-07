@@ -4,10 +4,7 @@ import btrplace.json.JSONConverterException;
 import btrplace.json.plan.ReconfigurationPlanConverter;
 import btrplace.model.Node;
 import btrplace.plan.ReconfigurationPlan;
-import btrplace.plan.event.Action;
-import btrplace.plan.event.Allocate;
-import btrplace.plan.event.BootVM;
-import btrplace.plan.event.MigrateVM;
+import btrplace.plan.event.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,8 +36,11 @@ public class PlanReader {
 
         try {
             ReconfigurationPlan plan = converter.fromJSON(new File(filename));
-            double[] act_types = countActions(plan);
-            System.out.printf("%f\t%f\t%f\n", act_types[0], act_types[1], act_types[2]);
+            int[] act_types = countBootShutdown(plan);
+            System.out.printf("%f\t%f\n", act_types[0], act_types[1]);
+
+//            double[] act_types = countActions(plan);
+//            System.out.printf("%f\t%f\t%f\n", act_types[0], act_types[1], act_types[2]);
 
 //            levelDependency(plan);
 
@@ -97,6 +97,15 @@ public class PlanReader {
         count[0] = count[0] / plan.getSize();
         count[1] = count[1] / plan.getSize();
         count[2] = count[2] / plan.getSize();
+        return count;
+    }
+
+    private int[] countBootShutdown(ReconfigurationPlan plan) {
+        int[] count = new int[2];
+        for (Action a : plan) {
+            if (a instanceof BootNode) count[0]++;
+            else if (a instanceof ShutdownNode) count[1]++;
+        }
         return count;
     }
 
