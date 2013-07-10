@@ -35,18 +35,17 @@ public class VerticalElasticity extends ReconfigurationScenario {
         int p = 10;
         if (findContinuous) {
             reconfigure(p, true);
-        }
-        else reconfigure(p, false);
+        } else reconfigure(p, false);
         System.out.print(sb.toString());
     }
 
     @Override
     public boolean reconfigure(int p, boolean c) {
         int DCconstraint[] = new int[2];
-        ArrayList<ArrayList<Integer>> violatedConstraints = new ArrayList<>();
+        HashSet<Integer>[] violatedConstraints = new HashSet[3];
         HashSet<Integer> affectedApps = new HashSet<>();
-        for (int i = 0; i < 5; i++) {
-            violatedConstraints.add(new ArrayList<Integer>());
+        for (int i = 0; i < 3; i++) {
+            violatedConstraints[i] = new HashSet<>();
         }
         boolean satisfied = true;
         Collection<SatConstraint> constraints = new ArrayList<>();

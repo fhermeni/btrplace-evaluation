@@ -31,13 +31,13 @@ public class PlanReader {
 
     }
 
-    public void read() {
+    public ReconfigurationPlan read() {
         ReconfigurationPlanConverter converter = new ReconfigurationPlanConverter();
-
+        ReconfigurationPlan plan = null;
         try {
-            ReconfigurationPlan plan = converter.fromJSON(new File(filename));
-            int[] act_types = countBootShutdown(plan);
-            System.out.printf("%f\t%f\n", act_types[0], act_types[1]);
+            plan = converter.fromJSON(new File(filename));
+//            int[] act_types = countBootShutdown(plan);
+//            System.out.printf("%d\t%d\n", act_types[0], act_types[1]);
 
 //            double[] act_types = countActions(plan);
 //            System.out.printf("%f\t%f\t%f\n", act_types[0], act_types[1], act_types[2]);
@@ -47,10 +47,11 @@ public class PlanReader {
 //            System.out.println(calculateAverage(plan));
 //            System.out.println(plan);
         } catch (IOException e) {
-            System.err.println();
+//            System.err.println(); // File not exist
         } catch (JSONConverterException e) {
             e.printStackTrace();
         }
+        return plan;
     }
 
     private void levelDependency(ReconfigurationPlan plan) {

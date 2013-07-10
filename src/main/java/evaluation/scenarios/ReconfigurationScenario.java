@@ -91,7 +91,7 @@ public abstract class ReconfigurationScenario implements Runnable {
         validateConstraint = checkMap.keySet();
     }
 
-    public void checkSatisfaction(ReconfigurationPlan plan, ArrayList<ArrayList<Integer>> constr,
+    public void checkSatisfaction(ReconfigurationPlan plan, HashSet<Integer>[] constr,
                                   int[] DCconstraint, HashSet<Integer> apps) {
         for (SatConstraint s : checkMap.keySet()) {
             Integer appId = checkMap.get(s);
@@ -99,13 +99,13 @@ public abstract class ReconfigurationScenario implements Runnable {
             if (!continuous) s.setContinuous(true);
             if (!s.isSatisfied(plan)) {
                 if (s instanceof Spread) {
-                    constr.get(0).add(appId);
+                    constr[0].add(appId);
                     apps.add(appId);
                 } else if (s instanceof Among) {
-                    constr.get(1).add(appId);
+                    constr[1].add(appId);
                     apps.add(appId);
                 } else if (s instanceof SplitAmong) {
-                    constr.get(2).add(appId);
+                    constr[2].add(appId);
                     apps.add(appId);
                 } else if (s instanceof SingleResourceCapacity) {
                     DCconstraint[0]++;
@@ -115,6 +115,49 @@ public abstract class ReconfigurationScenario implements Runnable {
             }
             s.setContinuous(continuous);
         }
+    }
+
+    public int[] countViolation(ReconfigurationPlan plan) {
+        HashSet<Integer> constr[] = new HashSet[3];
+        HashSet<Integer> apps = new HashSet<>();
+        int violated[] = new int[6];
+        for (int i = 0; i < 3; i++) {
+            constr[i] = new HashSet<>();
+        }
+
+        for (SatConstraint s : checkMap.keySet()) {
+            Integer appId = checkMap.get(s);
+            boolean continuous = s.isContinuous();
+            if (!continuous) s.setContinuous(true);
+            if (!s.isSatisfied(plan)) {
+                if (s instanceof Spread) {
+                    constr[0].add(appId);
+                    apps.add(appId);
+                } else if (s instanceof Among) {
+                    constr[1].add(appId);
+                    apps.add(appId);
+                } else if (s instanceof SplitAmong) {
+                    constr[2].add(appId);
+                    apps.add(appId);
+                } else if (s instanceof SingleResourceCapacity) {
+                    violated[3]++;
+                } else if (s instanceof MaxOnline) {
+                    violated[4]++;
+                }
+            }
+            s.setContinuous(continuous);
+        }
+        Set<Integer> set = new HashSet<>(constr[1]);
+        if (set.size() < constr[1].size()) {
+            System.out.println("Duplicate");
+        }
+
+        for (int i = 0; i < 3; i++) {
+            violated[i] = constr[i].size();
+        }
+        violated[5] = apps.size();
+//        System.out.printf("%d\t%d\t%d\t%d\t%d\n", modelId, constr[0].size(), constr[1].size(), constr[2].size(), apps.size());
+        return violated;
     }
 
     public static void findContinuous() {
@@ -135,14 +178,14 @@ public abstract class ReconfigurationScenario implements Runnable {
         System.out.printf("%d\t%d\t%d\t%d\t%d\n", spread, among, splita, srec, max);
     }
 
-    public void result(ReconfigurationPlan plan, boolean c, int p, ArrayList<ArrayList<Integer>> vc,
+    public void result(ReconfigurationPlan plan, boolean c, int p, HashSet<Integer>[] vc,
                        int[] dc, HashSet<Integer> app) {
         String separator = System.getProperty("file.separator");
         String path = System.getProperty("user.home") + separator + "newEvaluation/plan"
                 + separator + rp_type + separator;
         ConverterTools.planToFile(plan, String.format("%splan%d%b.json", path, modelId, c));
         sb.append(String.format("%b\t%d\t%d\t", c, modelId, p));
-        sb.append(String.format("%d\t%d\t%d\t", vc.get(0).size(), vc.get(1).size(), vc.get(2).size()));
+        sb.append(String.format("%d\t%d\t%d\t", vc[0].size(), vc[1].size(), vc[2].size()));
         sb.append(String.format("%d\t%d\t%d\t", dc[0], dc[1], app.size()));
         float[] load = currentLoad(model);
         sb.append(String.format("%f\t%f\t", load[0], load[1]));

@@ -43,12 +43,16 @@ public class Evaluator {
                     rs = new BootStorm(i);
                     thread.execute(rs);
                     break;
+                case cv:
+                    rs = new ConstraintViolation(i);
+                    thread.execute(rs);
+                    break;
             }
         }
         thread.shutdown();
     }
 
     enum SType {
-        ve, he, sf, bs
+        ve, he, sf, bs, cv
     }
 }
