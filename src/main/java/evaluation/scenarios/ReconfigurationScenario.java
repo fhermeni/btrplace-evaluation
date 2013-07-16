@@ -43,6 +43,8 @@ public abstract class ReconfigurationScenario implements Runnable {
         cra.doRepair(true);
     }
 
+    abstract boolean reconfigure(int p, boolean c);
+
     public static float[] currentLoad(Model measure_model) {
         float[] loads = new float[2];
         Mapping mapping = measure_model.getMapping();
@@ -62,8 +64,6 @@ public abstract class ReconfigurationScenario implements Runnable {
     public static void setTimeOut(int timeout) {
         TIME_OUT = timeout;
     }
-
-    abstract boolean reconfigure(int p, boolean c);
 
     public void readData(int id) {
         String path = System.getProperty("user.home") + System.getProperty("file.separator") + "model"
@@ -184,7 +184,7 @@ public abstract class ReconfigurationScenario implements Runnable {
         String path = System.getProperty("user.home") + separator + "newEvaluation/plan"
                 + separator + rp_type + separator;
         ConverterTools.planToFile(plan, String.format("%splan%d%b.json", path, modelId, c));
-        sb.append(String.format("%b\t%d\t%d\t", c, modelId, p));
+        sb.append(String.format("%d\t", modelId));
         sb.append(String.format("%d\t%d\t%d\t", vc[0].size(), vc[1].size(), vc[2].size()));
         sb.append(String.format("%d\t%d\t%d\t", dc[0], dc[1], app.size()));
         float[] load = currentLoad(model);

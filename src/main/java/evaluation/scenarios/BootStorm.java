@@ -81,13 +81,13 @@ public class BootStorm extends ReconfigurationScenario {
         try {
             plan = cra.solve(model, cstrs);
             if (plan == null) {
-                sb.append(String.format("Model %d\t %b \t No solution\n", modelId, c));
+                sb.append(String.format("%d\tNo solution\n", modelId));
                 return false;
             } else {
                 checkSatisfaction(plan, violatedConstraints, DCconstraint, affectedApps);
             }
         } catch (SolverException e) {
-            sb.append(String.format("Model %d.\t%b\t%s\n", modelId, c, e.getMessage()));
+            sb.append(String.format("%d\t%s\n", modelId, e.getMessage()));
             return false;
         }
         result(plan, c, p, violatedConstraints, DCconstraint, affectedApps);
