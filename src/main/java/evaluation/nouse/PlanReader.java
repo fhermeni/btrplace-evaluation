@@ -23,6 +23,7 @@ public class PlanReader {
     }
 
     public static void main(String[] args) {
+        System.out.printf("Boot\tMigrate\tBootNode\n");
         for (int i = 1; i <= 100; i++) {
             PlanReader pr = new PlanReader(String.format("%splan%d%s.json", args[0], i, args[1]));
             pr.read();
@@ -36,11 +37,11 @@ public class PlanReader {
         ReconfigurationPlan plan = null;
         try {
             plan = converter.fromJSON(new File(filename));
-//            int[] act_types = countBootShutdown(plan);
-//            System.out.printf("%d\t%d\n", act_types[0], act_types[1]);
+//            int[] act_types1 = countBootShutdown(plan);
+//            System.out.printf("%d\t%d\t", act_types1[0], act_types1[1]);
 
-//            double[] act_types = countActions(plan);
-//            System.out.printf("%f\t%f\t%f\n", act_types[0], act_types[1], act_types[2]);
+            double[] act_types = countActions(plan);
+            System.out.printf("%f\t%f\t%f\n", act_types[0], act_types[1], act_types[2]);
 
 //            levelDependency(plan);
 
@@ -89,15 +90,20 @@ public class PlanReader {
     }
 
     private double[] countActions(ReconfigurationPlan plan) {
+        int allocate = 0;
         double[] count = new double[3];
         for (Action a : plan) {
             if (a instanceof BootVM) count[0]++;
             else if (a instanceof MigrateVM) count[1]++;
-            else if (a instanceof Allocate) count[2]++;
+            else if (a instanceof BootNode) count[2]++;
+            else if (a instanceof Allocate) allocate++;
         }
-        count[0] = count[0] / plan.getSize();
-        count[1] = count[1] / plan.getSize();
-        count[2] = count[2] / plan.getSize();
+
+        int size = plan.getSize();
+        size -= allocate;
+        count[0] = count[0] / size;
+        count[1] = count[1] / size;
+        count[2] = count[2] / size;
         return count;
     }
 

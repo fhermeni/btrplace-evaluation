@@ -11,7 +11,7 @@ import java.io.IOException;
  * Time: 10:53 AM
  */
 public class Evaluator {
-    public static void main(String[] args) {
+    public static void main(String... args) {
         SType type = SType.valueOf(args[0]);
 
         StringBuilder output = new StringBuilder();
@@ -23,11 +23,11 @@ public class Evaluator {
         ReconfigurationScenario rs;
 
         String filename = String.format("%s%d%b", type, timeout, cont);
-//        int[] problems = {3, 13, 14, 29, 34, 44, 52, 70, 76, 89, 95, 97};  // failed cases
-        int n = 100;
-        int[] problems = new int[n];
-        for (int i = 0; i < n; i++) {
-            problems[i] = i + 1;
+
+        int[] problems = new int[args.length - 3];
+
+        for (int i = 3; i < args.length; i++) {
+            problems[i - 3] = Integer.parseInt(args[i]);
         }
         for (int i : problems) {
             switch (type) {

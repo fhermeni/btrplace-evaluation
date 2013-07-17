@@ -23,7 +23,7 @@ import java.util.*;
  */
 public abstract class ReconfigurationScenario implements Runnable {
 
-    static int TIME_OUT = 300;
+    static int TIME_OUT = 3600;
     protected static boolean findContinuous = false;
     int modelId;
     Model model;
