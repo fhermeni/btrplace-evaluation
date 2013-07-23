@@ -19,21 +19,21 @@ public class HorizontalElasticity extends ReconfigurationScenario {
 
     Collection<VM> cloneVMs;
 
-    public HorizontalElasticity(int id) {
-        super(id);
+    public HorizontalElasticity(String mfile, String appFile, String out) {
+        super(mfile, appFile, out);
         cloneVMs = new ArrayList<>();
-        rp_type = "horizontal";
+        rp_type = "he";
     }
 
     public static void main(String[] args) {
-        HorizontalElasticity he = new HorizontalElasticity(1);
+        HorizontalElasticity he = new HorizontalElasticity(args[0], args[1], args[2]);
 //        he.findContinuous();
         he.run();
     }
 
     @Override
     public void run() {
-        readData(modelId);
+        readData();
         Collections.shuffle((new ArrayList<>(applications)));
         int p = 25;
         int size = applications.size() * p / 100;
@@ -123,7 +123,7 @@ public class HorizontalElasticity extends ReconfigurationScenario {
             sb.append(String.format("%d\t%s\n", modelId, e.getMessage()));
             return false;
         }
-        result(plan, c, p, violatedConstraints, DCconstraint, affectedApps);
+        result(plan, violatedConstraints, DCconstraint, affectedApps);
         return satisfied;
     }
 

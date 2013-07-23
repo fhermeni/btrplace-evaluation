@@ -14,6 +14,7 @@ import btrplace.solver.choco.constraint.CMaxOnlines;
 import evaluation.demo.Application;
 import evaluation.generator.ConverterTools;
 
+import java.io.File;
 import java.util.*;
 
 /**
@@ -35,9 +36,14 @@ public abstract class ReconfigurationScenario implements Runnable {
     ShareableResource ecu;
     ShareableResource ram;
     String rp_type;
+    String inModel;
+    String inApp;
+    String outPath;
 
-    public ReconfigurationScenario(int id) {
-        modelId = id;
+    public ReconfigurationScenario(String in_model, String in_app, String out) {
+        inModel = in_model;
+        inApp = in_app;
+        outPath = out;
         sb = new StringBuilder();
         cra.setTimeLimit(TIME_OUT);
         cra.doRepair(true);
@@ -65,12 +71,11 @@ public abstract class ReconfigurationScenario implements Runnable {
         TIME_OUT = timeout;
     }
 
-    public void readData(int id) {
-        String path = System.getProperty("user.home") + System.getProperty("file.separator") + "model"
-                + System.getProperty("file.separator");
-        model = ConverterTools.getModelFromFile(path + "model" + id + ".json");
+    public void readData() {
+
+        model = ConverterTools.getModelFromFile(inModel);
 //        validateConstraint = ConverterTools.getConstraints(model, path + "constraints" + id + ".json");
-        applications = ConverterTools.getApplicationsFromFile(model, path + "applications" + id + ".json");
+        applications = ConverterTools.getApplicationsFromFile(model, inApp);
         ecu = (ShareableResource) model.getView(ShareableResource.VIEW_ID_BASE + "ecu");
         ram = (ShareableResource) model.getView(ShareableResource.VIEW_ID_BASE + "ram");
         cra.getSatConstraintMapper().register(new CMaxOnlines.Builder());
@@ -81,7 +86,6 @@ public abstract class ReconfigurationScenario implements Runnable {
             }
         }
         Set<Node> allNodes = model.getMapping().getAllNodes();
-//        System.out.println("Node size:" + allNodes.size());
         SingleResourceCapacity SReC = new SingleResourceCapacity(allNodes, "ecu", 60, false);
         SingleResourceCapacity SReC2 = new SingleResourceCapacity(allNodes, "ram", 120, false);
         MaxOnline maxOnline = new MaxOnline(allNodes, 240, false);
@@ -156,7 +160,6 @@ public abstract class ReconfigurationScenario implements Runnable {
             violated[i] = constr[i].size();
         }
         violated[5] = apps.size();
-//        System.out.printf("%d\t%d\t%d\t%d\t%d\n", modelId, constr[0].size(), constr[1].size(), constr[2].size(), apps.size());
         return violated;
     }
 
@@ -178,12 +181,14 @@ public abstract class ReconfigurationScenario implements Runnable {
         System.out.printf("%d\t%d\t%d\t%d\t%d\n", spread, among, splita, srec, max);
     }
 
-    public void result(ReconfigurationPlan plan, boolean c, int p, HashSet<Integer>[] vc,
+    public void result(ReconfigurationPlan plan, HashSet<Integer>[] vc,
                        int[] dc, HashSet<Integer> app) {
-        String separator = System.getProperty("file.separator");
-        String path = System.getProperty("user.home") + separator + "newEvaluation/plan"
-                + separator + rp_type + separator;
-        ConverterTools.planToFile(plan, String.format("%splan%d%b.json", path, modelId, c));
+
+        if (outPath != null) {
+            String filename = String.format("%s%s%d%b", new File(inModel).getName(), rp_type, TIME_OUT, findContinuous);
+            ConverterTools.planToFile(plan, outPath + filename + "plan.json");
+        }
+
         sb.append(String.format("%d\t", modelId));
         sb.append(String.format("%d\t%d\t%d\t", vc[0].size(), vc[1].size(), vc[2].size()));
         sb.append(String.format("%d\t%d\t%d\t", dc[0], dc[1], app.size()));

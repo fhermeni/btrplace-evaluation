@@ -18,19 +18,19 @@ import java.util.HashSet;
  */
 public class BootStorm extends ReconfigurationScenario {
 
-    public BootStorm(int id) {
-        super(id);
-        rp_type = "storm";
+    public BootStorm(String mfile, String appFile, String out) {
+        super(mfile, appFile, out);
+        rp_type = "bs";
     }
 
     public static void main(String[] args) {
-        ReconfigurationScenario instance = new BootStorm(1);
+        ReconfigurationScenario instance = new BootStorm(args[0], args[1], args[2]);
         instance.run();
     }
 
     @Override
     public void run() {
-        readData(modelId);
+        readData();
         int p = 400;
         if (findContinuous)
             reconfigure(p, true);
@@ -90,7 +90,7 @@ public class BootStorm extends ReconfigurationScenario {
             sb.append(String.format("%d\t%s\n", modelId, e.getMessage()));
             return false;
         }
-        result(plan, c, p, violatedConstraints, DCconstraint, affectedApps);
+        result(plan, violatedConstraints, DCconstraint, affectedApps);
         return satisfied;
     }
 

@@ -20,21 +20,21 @@ public class ServerFailures extends ReconfigurationScenario {
     Collection<Node> failedNodes;
     Collection<VM> restartVMs;
 
-    public ServerFailures(int id) {
-        super(id);
+    public ServerFailures(String mfile, String appFile, String out) {
+        super(mfile, appFile, out);
         failedNodes = new ArrayList<>();
         restartVMs = new ArrayList<>();
-        rp_type = "failure";
+        rp_type = "sf";
     }
 
     public static void main(String[] args) {
-        ReconfigurationScenario instance = new ServerFailures(1);
+        ReconfigurationScenario instance = new ServerFailures(args[0], args[1], args[2]);
         instance.run();
     }
 
     @Override
     public void run() {
-        readData(modelId);
+        readData();
         int p = 5;
         List<Node> nodes = new ArrayList<>(model.getMapping().getAllNodes());
         int size = p * nodes.size() / 100;
@@ -101,7 +101,7 @@ public class ServerFailures extends ReconfigurationScenario {
             sb.append(String.format("%d\t%s\n", modelId, e.getMessage()));
             return false;
         }
-        result(plan, c, p, violatedConstraints, DCconstraint, affectedApps);
+        result(plan, violatedConstraints, DCconstraint, affectedApps);
         return satisfied;
     }
 

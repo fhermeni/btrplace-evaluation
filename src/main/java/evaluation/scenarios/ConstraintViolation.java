@@ -10,8 +10,8 @@ import evaluation.nouse.PlanReader;
  */
 public class ConstraintViolation extends ReconfigurationScenario {
 
-    public ConstraintViolation(int id) {
-        super(id);
+    public ConstraintViolation(String mfile, String appFile, String out) {
+        super(mfile, appFile, out);
     }
 
     @Override
@@ -25,14 +25,14 @@ public class ConstraintViolation extends ReconfigurationScenario {
         PlanReader pr = new PlanReader(String.format("%s/plan%dfalse.json", file, modelId));
         ReconfigurationPlan plan = pr.read();
         if (plan != null) {
-            readData(modelId);
+            readData();
             int[] v = countViolation(plan);
             System.out.printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\n", modelId, v[0], v[1], v[2], v[3], v[4], v[5]);
         }
     }
 
     public static void main(String[] args) {
-        ReconfigurationScenario instance = new ConstraintViolation(1);
+        ReconfigurationScenario instance = new ConstraintViolation(args[0], args[1], args[2]);
         instance.run();
     }
 }
