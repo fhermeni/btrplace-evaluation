@@ -121,48 +121,6 @@ public abstract class ReconfigurationScenario implements Runnable {
         }
     }
 
-    public int[] countViolation(ReconfigurationPlan plan) {
-        HashSet<Integer> constr[] = new HashSet[3];
-        HashSet<Integer> apps = new HashSet<>();
-        int violated[] = new int[6];
-        for (int i = 0; i < 3; i++) {
-            constr[i] = new HashSet<>();
-        }
-
-        for (SatConstraint s : checkMap.keySet()) {
-            Integer appId = checkMap.get(s);
-            boolean continuous = s.isContinuous();
-            if (!continuous) s.setContinuous(true);
-            if (!s.isSatisfied(plan)) {
-                if (s instanceof Spread) {
-                    constr[0].add(appId);
-                    apps.add(appId);
-                } else if (s instanceof Among) {
-                    constr[1].add(appId);
-                    apps.add(appId);
-                } else if (s instanceof SplitAmong) {
-                    constr[2].add(appId);
-                    apps.add(appId);
-                } else if (s instanceof SingleResourceCapacity) {
-                    violated[3]++;
-                } else if (s instanceof MaxOnline) {
-                    violated[4]++;
-                }
-            }
-            s.setContinuous(continuous);
-        }
-        Set<Integer> set = new HashSet<>(constr[1]);
-        if (set.size() < constr[1].size()) {
-            System.out.println("Duplicate");
-        }
-
-        for (int i = 0; i < 3; i++) {
-            violated[i] = constr[i].size();
-        }
-        violated[5] = apps.size();
-        return violated;
-    }
-
     public static void findContinuous() {
         findContinuous = true;
     }

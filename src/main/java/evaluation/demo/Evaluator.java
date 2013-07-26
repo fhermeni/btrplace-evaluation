@@ -83,11 +83,6 @@ public class Evaluator {
                 rs.run();
                 output.append(rs.toString());
                 break;
-            case cv:
-                rs = new ConstraintViolation(mfile, appFile, out);
-                rs.run();
-                output.append(rs.toString());
-                break;
         }
         if (out != null) {
             String filename = String.format("%s%s%d%b", new File(mfile).getName(), type, timeout, cont);
@@ -102,6 +97,6 @@ public class Evaluator {
     }
 
     enum SType {
-        ve, he, sf, bs, cv
+        ve, he, sf, bs
     }
 }
