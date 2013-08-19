@@ -10,6 +10,10 @@ import btrplace.solver.choco.DefaultChocoReconfigurationAlgorithm;
 import btrplace.solver.choco.constraint.CMaxOnlines;
 import btrplace.solver.choco.constraint.CMaxSpareResources;
 import evaluation.generator.ConverterTools;
+import org.apache.commons.cli.BasicParser;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.Options;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,9 +28,10 @@ import java.util.Set;
 public class ModelMaker implements Runnable {
 
 
-    final static int NUM_RACK = 16;
-    final static int NUM_APP = 350;
-    final static int NODES_PER_RACK = 16;
+    static int NUM_RACK = 16;
+    static int NUM_APP = 350;
+    static int NODES_PER_RACK = 16;
+    static String path;
     Model model;
     boolean restriction;
     ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
@@ -40,8 +45,16 @@ public class ModelMaker implements Runnable {
     private int modelId;
 
     public ModelMaker(int id) {
+        this(id, 16, 16, 350, System.getProperty("user.home"));
+    }
+
+    public ModelMaker(int id, int r, int npr, int app, String out) {
         model = new DefaultModel();
         modelId = id;
+        NODES_PER_RACK = npr;
+        NUM_APP = app;
+        NUM_RACK = r;
+        path = out;
         restriction = false;
         racks = new ArrayList<>();
         groups = new ArrayList<>();
@@ -55,7 +68,42 @@ public class ModelMaker implements Runnable {
     }
 
     public static void main(String[] args) {
-        ModelMaker modelMaker = new ModelMaker(1);
+        int id = 1;
+        int racks = 16;
+        int rpn = 16;
+        int app = 350;
+        StringBuilder out = new StringBuilder();
+        Options options = new Options();
+        options.addOption("i", true, "instance identifier");
+        options.addOption("r", true, "number of racks");
+        options.addOption("p", true, "number of node/pack");
+        options.addOption("a", true, "number of applications");
+        options.addOption("o", true, "output directory");
+
+        CommandLineParser parser = new BasicParser();
+        try {
+            CommandLine line = parser.parse(options, args);
+            if (line.hasOption("i")) {
+                id = Integer.parseInt(line.getOptionValue("i"));
+            }
+            if (line.hasOption("r")) {
+                racks = Integer.parseInt(line.getOptionValue("r"));
+            }
+            if (line.hasOption("p")) {
+                rpn = Integer.parseInt(line.getOptionValue("p"));
+            }
+            if (line.hasOption("a")) {
+                app = Integer.parseInt(line.getOptionValue("a"));
+            }
+            if (line.hasOption("o")) {
+                out.append(line.getOptionValue("o"));
+            }
+        }
+        catch (Exception e) {
+            System.err.println("Argument error: " + e.toString());
+            System.exit(-1);
+            }
+        ModelMaker modelMaker = new ModelMaker(id, racks, rpn, app, out.toString());
         modelMaker.run();
     }
 
@@ -64,7 +112,7 @@ public class ModelMaker implements Runnable {
         runMix();
         float[] load = currentLoad();
         System.out.printf("%f, %f\n", load[0], load[1]);
-        storeModel(true);
+        storeModel(path);
     }
 
     private void initMap() {
@@ -83,8 +131,6 @@ public class ModelMaker implements Runnable {
             if (j < 8) group1.addAll(ns);
             else group2.addAll(ns);
         }
-//        System.out.println("size: " + model.getNodes().size());
-
         groups.add(group1);
         groups.add(group2);
     }
@@ -198,15 +244,10 @@ public class ModelMaker implements Runnable {
         validateConstraint.add(splitAmong);
     }*/
 
-    private void storeModel(boolean store) {
-        if (store) {
-            String path = System.getProperty("user.home") + System.getProperty("file.separator") + "model"
-                    + System.getProperty("file.separator");
+    private void storeModel(String out) {
+            String path = out +  System.getProperty("file.separator");
             ConverterTools.modelToFile(model, path + "model" + modelId + ".json");
-//            ConverterTools.constraintsToFile(validateConstraint, path + "constraints" + modelId + ".json");
             ConverterTools.applicationsToFile(model, appList, path + "applications" + modelId + ".json");
-
-
-        }
+        System.out.println("Model and Applications are saved in folder: " + out);
     }
 }

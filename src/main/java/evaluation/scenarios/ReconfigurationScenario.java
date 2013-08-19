@@ -143,7 +143,9 @@ public abstract class ReconfigurationScenario implements Runnable {
                        int[] dc, HashSet<Integer> app) {
 
         if (outPath != null) {
-            String filename = String.format("%s%s%d%b", new File(inModel).getName(), rp_type, TIME_OUT, findContinuous);
+            StringBuilder name = new StringBuilder(new File(inModel).getName());
+            name.delete(name.lastIndexOf("."), name.length());
+            String filename = String.format("%s%s%d%b", name, rp_type, TIME_OUT, findContinuous);
             ConverterTools.planToFile(plan, outPath + filename + "plan.json");
         }
 
