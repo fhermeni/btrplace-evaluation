@@ -59,7 +59,6 @@ public class ServerFailures extends ReconfigurationScenario {
             reconfigure(size, true);
         else
             reconfigure(size, false);
-        System.out.print(sb.toString());
     }
 
     @Override
@@ -84,7 +83,7 @@ public class ServerFailures extends ReconfigurationScenario {
         try {
             plan = cra.solve(model, constraints);
             if (plan == null) {
-                sb.append(String.format("%d\tNo solution\n", modelId));
+                sb.append(String.format("%s\tNo solution\n", instance));
                 return false;
             } else {
                 for (Node n : failedNodes) {
@@ -96,7 +95,7 @@ public class ServerFailures extends ReconfigurationScenario {
             }
             result(plan, violatedConstraints, DCconstraint, affectedApps);
         } catch (SolverException e) {
-            sb.append(String.format("%d\t%s\n", modelId, e.getMessage()));
+            sb.append(String.format("%s\t%s\n", instance, e.getMessage()));
             return false;
         }  catch (Exception e) {
             throw new RuntimeException(e);

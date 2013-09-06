@@ -43,7 +43,6 @@ public class HorizontalElasticity extends ReconfigurationScenario {
             reconfigure(p, true);
         else
             reconfigure(p, false);
-        System.out.print(this);
     }
 
     private void horizontalScale(Application app) {
@@ -110,14 +109,14 @@ public class HorizontalElasticity extends ReconfigurationScenario {
         try {
             plan = cra.solve(model, cstrs);
             if (plan == null) {
-                sb.append(String.format("%d\tNo solution\n", modelId));
+                sb.append(String.format("%s\tNo solution\n", instance));
                 return false;
             } else {
                 checkSatisfaction(plan, violatedConstraints, DCconstraint, affectedApps);
             }
             result(plan, violatedConstraints, DCconstraint, affectedApps);
         } catch (SolverException e) {
-            sb.append(String.format("%d\t%s\n", modelId, e.getMessage()));
+            sb.append(String.format("%s\t%s\n", instance, e.getMessage()));
             return false;
         }  catch (Exception e) {
             throw new RuntimeException(e);

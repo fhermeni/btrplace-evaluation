@@ -17,8 +17,9 @@ public class Evaluator {
         StringBuilder output = new StringBuilder();
         int timeout = 0;
         boolean cont = false;
-        String out = null;
+        String res = null;
         String in = null;
+        String plan = null;
         Options options = new Options();
         Option o = new Option("s", true, "Reconfiguration Scenario");
         o.setRequired(true);
@@ -28,7 +29,8 @@ public class Evaluator {
         o = new Option("i", true, "instance");
         o.setRequired(true);
         options.addOption(o);
-        options.addOption("o", true, "Output path for result");
+        options.addOption("r", true, "output file for the results");
+        options.addOption("p", true, "output JSON file for the resulting plan");
 
         CommandLineParser parser = new BasicParser();
         try {
@@ -45,8 +47,11 @@ public class Evaluator {
             if (line.hasOption("i")) {
                 in = line.getOptionValue("i");
             }
-            if (line.hasOption("o")) {
-                out = line.getOptionValue("o");
+            if (line.hasOption("r")) {
+                res = line.getOptionValue("r");
+            }
+            if (line.hasOption("p")) {
+                plan = line.getOptionValue("p");
             }
         } catch (ParseException e) {
             System.err.println(e.getMessage());
@@ -58,27 +63,27 @@ public class Evaluator {
 
         ReconfigurationScenario.setTimeOut(timeout);
         if (cont) ReconfigurationScenario.findContinuous();
-        ReconfigurationScenario rs;
+        ReconfigurationScenario rs = null;
 
         try {
         switch (type) {
             case ve:
-                rs = new VerticalElasticity(in, out);
+                rs = new VerticalElasticity(in, plan);
                 rs.run();
                 output.append(rs);
                 break;
             case he:
-                rs = new HorizontalElasticity(in, out);
+                rs = new HorizontalElasticity(in, plan);
                 rs.run();
                 output.append(rs);
                 break;
             case sf:
-                rs = new ServerFailures(in, out);
+                rs = new ServerFailures(in, plan);
                 rs.run();
                 output.append(rs);
                 break;
             case bs:
-                rs = new BootStorm(in, out);
+                rs = new BootStorm(in, plan);
                 rs.run();
                 output.append(rs);
                 break;
@@ -87,14 +92,16 @@ public class Evaluator {
             e.printStackTrace();
             System.exit(1);
         }
-        if (out != null) {
+        if (res != null) {
             try {
-                FileWriter toFile = new FileWriter(out + ".txt");
+                FileWriter toFile = new FileWriter(res, true);
                 toFile.write(output.toString());
                 toFile.close();
             } catch (IOException e) {
                 System.err.println(e.getMessage());
             }
+        } else {
+            System.out.print(rs.toString());
         }
     }
 

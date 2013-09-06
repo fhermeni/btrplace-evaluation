@@ -33,7 +33,6 @@ public abstract class ReconfigurationScenario implements Runnable {
 
     static int TIME_OUT = 3600;
     protected static boolean findContinuous = false;
-    int modelId;
     Model model;
     Set<SatConstraint> validateConstraint;
     Map<SatConstraint, Integer> checkMap;
@@ -153,9 +152,11 @@ public abstract class ReconfigurationScenario implements Runnable {
 
         ReconfigurationPlanConverter pc = new ReconfigurationPlanConverter();
         if (outPath != null) {
-            pc.toJSON(plan, new BufferedWriter(new FileWriter(outPath)));
+            BufferedWriter b = new BufferedWriter(new FileWriter(outPath));
+            pc.toJSON(plan, b);
+            b.close();
         }
-        sb.append(String.format("%s\t", instance));
+        sb.append(String.format("%s\t", new File(instance).getName()));
         sb.append(String.format("%d\t%d\t%d\t", vc[0].size(), vc[1].size(), vc[2].size()));
         sb.append(String.format("%d\t%d\t%d\t", dc[0], dc[1], app.size()));
         float[] load = currentLoad(model);
