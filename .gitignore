@@ -1,7 +1,6 @@
 #Intellij IDEA files #
 *.iml
 *.class
-*.json
 *.log
 .classpath
 .project

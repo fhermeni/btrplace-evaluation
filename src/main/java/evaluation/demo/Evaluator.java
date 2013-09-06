@@ -83,14 +83,11 @@ public class Evaluator {
                 rs.run();
                 output.append(rs.toString());
                 break;
-            case cv:
-                rs = new ConstraintViolation(mfile, appFile, out);
-                rs.run();
-                output.append(rs.toString());
-                break;
         }
         if (out != null) {
-            String filename = String.format("%s%s%d%b", new File(mfile).getName(), type, timeout, cont);
+            StringBuilder name = new StringBuilder(new File(mfile).getName());
+            name.delete(name.lastIndexOf("."), name.length());
+            String filename = String.format("%s%s%d%b", name, type, timeout, cont);
             try {
                 FileWriter toFile = new FileWriter(out + filename + ".txt");
                 toFile.write(output.toString());
@@ -102,6 +99,6 @@ public class Evaluator {
     }
 
     enum SType {
-        ve, he, sf, bs, cv
+        ve, he, sf, bs
     }
 }

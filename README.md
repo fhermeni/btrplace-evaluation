@@ -8,30 +8,24 @@ to the hardware failures or increasing in the workload of VMs.
 
 
 #Evaluation Protocol
-To evaluation Btrplace, We use the specification of the [Dell Active System 50](http://www.dell.com/us/business/p/dell-vstart-50/pd), a pre-built managed converged system for small datacenter. The work-node specification details are listed below.
-Dell PowerEdge R620 Server: 2S/1U, 8 cores/socket, 2 threads / core.  64GB of memory.   
-Storage: Local Hard Drive: 300GB. Storage array: 7.2TB  
+To evaluation Btrplace, We use the specification of the commodity server. The work-node specification details are listed below.
+node:  64 cores, 128 GB of memory.   
 **Server Summary**
 <table>
   <tr>
-    <th>#Socket</th>
     <th>#Cores</th>
-    <th>#Threads</th>
     <th>RAM</th>
-    <th>Disk Size</th>
   </tr>
   <tr>
-    <td>2</td>
-  <td>16</td>
-	<td>32</td>
-    <td>64GB</td>
-    <td>320GB</td>
+    <td>64</td>
+  <td>128 GB</td>
 </table>
 
 **Datacenter configuration**   
-A medium datacenter, e.g [Open Cloud Testbed](http://opencloudconsortium.org), consists of 120 working nodes racked in 4 racks each mounted 30 nodes. 
-In this datacenter, we run many n-tiers applications that have multiple replicas for each tier to ensure high availability,
-fault tolerance and high performance properties. For instance, a 3-tier application has 2 VMs for the Presentation Layer,
+The datacenter consists of 256 working nodes mounted equally in 16 racks. The datacenter is divided into 2 zones each contains 8 racks. 
+In this datacenter, we run 350 3-tiers applications that have between 6 and 18 VMs, with 2 to 6 VMs per tier.
+
+For instance, a 3-tier application has 2 VMs for the Presentation Layer,
 4 VMs for Business Logic and Data Layers.
 
 
@@ -55,49 +49,37 @@ affect the performance of the applications. The consolidation manager need to re
 
 **Evaluation**
 In each scenario, we record the reconfiguration plans computed by BtrPlace both for discrete restriction
-and continuous restriction of the constraints. After that, we compare the time needed to compute the plans, and to
+and continuous restriction of the constraints. 
+We count the number of SLAs temporary violated, particullarly the constraints composing the SLAs are violated.
+After that, we compare the time needed to compute the plans, and to
 complete the reconfiguration process. Additionally, we compare the number of actions and the dependency between the action
 specified in the plans.
 
 ## Tools
 
 The evaluation contain:  
-* Model & Constraints Generator  
-* Benchmark  
-* PlanChecker  
+* ModelMaker
+* Evaluator
 
-**MCGenerator:**  Generates a model and a constraint associates with the model. One can specify the number of nodes and
- VMs in the model. Furthermore, for some constraints need a set of VM or a set of Node, this can be done by passing
- numbers in command parameters.
+**ModelMaker:**  Generates a model and constraints associates with the model. Each application contains 3 Spread constraints (1 per tier), 1 Among constraint (tier-3). 25% of applications have a splitAmong constraint (two instances of the application place on distinct zones). The datacenter has 1 a SingleResourceCapacity to limit the resource provision of each node (60 ucpu, 120 GB RAM) and a MaxOnlines constraint to limit the number of online nodes to 240.
 
-**Benchmark:** fixes the model if it doesn't satisfy the constraint, then the benchmark creates the increase in workload
- of VM by add the Preserve constraints on the set of VMs involved in the tested constraints.
+**Evaluator:** performs the evaluation according the passed arguments. The evaluator creates change in datacenter's environment (workload, failure, bootstorm) and reconfigures the datacenters. Futhermore, the evaluator checks for temporary violations of the constraints and records the reconfiguration plan in an output file.
 
-**PlanChecker:** Use to check whether the plan computed in the discrete satisfaction of the constraints satisfies their
-continuous satisfaction.
 
-**MCGenerator** -n #node -m #vm [-ci] [-t type] [-s sizeVmSet] [-z sizeNodeSet]  
--c  Produce continuous satisfaction constraint  
--i  Produce the model with identical nodes and VMs  
--n  Number of nodes in the model  
--m  Number of VMs in the model  
--t  Type of the constraint  
--s  Size of a set of VM  
--z  Size of a set of node  
+## Usage
+**ModelMaker** [-i identifier] [-r number of racks] [-p number of node per rack] [-a number of applications]
+Generator a model with the identifier equals to number i.
 
-  **Example:** MCGenerator -n 100 -m 500 -i -t spread -s 40  
-Produce a model of 100 nodes and 500 VMs and a Spread constraint including 40 VMs.
+*Example:* ModelMaker -i 2 -r 16 -p 16 -a 350   
+Produce a model with identifier of 2 and consists of 16 racks, 16 nodes per rack, and 350 Applications.
 
-**Benchmark** [-c] [-e event] [-i percent] [-o output] -m model constraints  
--c  Find the reconfiguration plan with continuous satisfaction  
--e  The Event Type causes the consolidation. It consists of [failure, load, ...]  
--i  In case of event load, this option indicates how many percents of increasing load  
--o  Set the output plan destination  
--m  The model to reconfigure  
-constraints: sequence listed constraints to be satisfied in the reconfiguration  
+**Evaluator** [-c] [-s scenario] [-t timeout] [-o output] -m model -a constraints  
+-c  find the reconfiguration plan with continuous restriction   
+-t  solver timeout  
+-m  input Model  
+-a  input Application constraints  
+-o  output path for the result  
+-e  the reconfiguration scenario. It consists of [ve,he,sf,bs]  
 
-**PlanChecker** [-c] -p plan constraints  
--c  Check the continuous satisfaction of the constraints  
--p  The plan to be checked  
-constraints: sequence listed constraints to be considered
+  *Example:* Evaluator -m model.json -a application.json -s ve -t 60 -o result
 
