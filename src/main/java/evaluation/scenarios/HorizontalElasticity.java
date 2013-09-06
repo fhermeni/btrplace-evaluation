@@ -124,6 +124,8 @@ public class HorizontalElasticity extends ReconfigurationScenario {
             return false;
         }
         result(plan, violatedConstraints, DCconstraint, affectedApps);
+        System.err.println(cra.getStatistics().getParameters().doRepair());
+        System.err.println(cra.getStatistics());
         return satisfied;
     }
 

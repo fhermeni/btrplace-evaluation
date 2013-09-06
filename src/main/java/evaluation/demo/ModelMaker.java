@@ -8,7 +8,6 @@ import btrplace.solver.SolverException;
 import btrplace.solver.choco.ChocoReconfigurationAlgorithm;
 import btrplace.solver.choco.DefaultChocoReconfigurationAlgorithm;
 import btrplace.solver.choco.constraint.CMaxOnlines;
-import btrplace.solver.choco.constraint.CMaxSpareResources;
 import evaluation.generator.ConverterTools;
 
 import java.util.ArrayList;
@@ -55,8 +54,10 @@ public class ModelMaker implements Runnable {
     }
 
     public static void main(String[] args) {
-        ModelMaker modelMaker = new ModelMaker(1);
-        modelMaker.run();
+        for (int i = 0; i < 50; i++) {
+            ModelMaker modelMaker = new ModelMaker(i);
+            modelMaker.run();
+        }
     }
 
     public void run() {
@@ -90,8 +91,8 @@ public class ModelMaker implements Runnable {
     }
 
     private boolean runMix() {
-        cra.getSatConstraintMapper().register(new CMaxOnlines.Builder());
-        cra.getSatConstraintMapper().register(new CMaxSpareResources.Builder());
+        cra.getConstraintMapper().register(new CMaxOnlines.Builder());
+        //cra.getConstraintMapper().register(new CMaxSpareResources.Builder());
         Collection<SatConstraint> constraints = new ArrayList<>();
 
         try {
@@ -100,9 +101,9 @@ public class ModelMaker implements Runnable {
                 runApplication(app, constraints);
                 if (i % 4 == 0) makeHA(app, constraints);
             }
-            SingleResourceCapacity SReC = new SingleResourceCapacity(model.getNodes(), "ecu", 60, restriction);
-            SingleResourceCapacity SReC2 = new SingleResourceCapacity(model.getNodes(), "ram", 120, restriction);
-            MaxOnline maxOnline = new MaxOnline(model.getNodes(), 240, restriction);
+            SingleResourceCapacity SReC = new SingleResourceCapacity(model.getMapping().getAllNodes(), "ecu", 60, restriction);
+            SingleResourceCapacity SReC2 = new SingleResourceCapacity(model.getMapping().getAllNodes(), "ram", 120, restriction);
+            MaxOnline maxOnline = new MaxOnline(model.getMapping().getAllNodes(), 240, restriction);
             validateConstraint.add(maxOnline);
             validateConstraint.add(SReC);
             validateConstraint.add(SReC2);
@@ -200,11 +201,11 @@ public class ModelMaker implements Runnable {
 
     private void storeModel(boolean store) {
         if (store) {
-            String path = System.getProperty("user.home") + System.getProperty("file.separator") + "model"
-                    + System.getProperty("file.separator");
-            ConverterTools.modelToFile(model, path + "model" + modelId + ".json");
+            /*String path = System.getProperty("user.home") + System.getProperty("file.separator") + "model"
+                    + System.getProperty("file.separator");*/
+            ConverterTools.modelToFile(model, "./" + modelId + ".json");
 //            ConverterTools.constraintsToFile(validateConstraint, path + "constraints" + modelId + ".json");
-            ConverterTools.applicationsToFile(model, appList, path + "applications" + modelId + ".json");
+            ConverterTools.applicationsToFile(model, appList, "./" + "applications" + modelId + ".json");
 
 
         }

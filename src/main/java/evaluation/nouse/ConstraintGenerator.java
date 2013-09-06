@@ -109,7 +109,7 @@ public class ConstraintGenerator {
         int j = 0;
         for (int i = 0; i < Number_of_Set; i++) {
             Set<Node> tmpSet = new HashSet<Node>();
-            int size = model.getNodes().size() / Number_of_Set;
+            int size = model.getMapping().getNbNodes() / Number_of_Set;
             for (int k = 0; k < size; k++) {
                 tmpSet.add(nodes.get(j++));
             }

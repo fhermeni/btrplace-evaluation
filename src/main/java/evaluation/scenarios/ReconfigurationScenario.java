@@ -9,8 +9,8 @@ import btrplace.model.view.ShareableResource;
 import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.choco.ChocoReconfigurationAlgorithm;
 import btrplace.solver.choco.DefaultChocoReconfigurationAlgorithm;
-import btrplace.solver.choco.SolvingStatistics;
 import btrplace.solver.choco.constraint.CMaxOnlines;
+import btrplace.solver.choco.runner.SolvingStatistics;
 import evaluation.demo.Application;
 import evaluation.generator.ConverterTools;
 
@@ -78,7 +78,7 @@ public abstract class ReconfigurationScenario implements Runnable {
         applications = ConverterTools.getApplicationsFromFile(model, inApp);
         ecu = (ShareableResource) model.getView(ShareableResource.VIEW_ID_BASE + "ecu");
         ram = (ShareableResource) model.getView(ShareableResource.VIEW_ID_BASE + "ram");
-        cra.getSatConstraintMapper().register(new CMaxOnlines.Builder());
+        cra.getConstraintMapper().register(new CMaxOnlines.Builder());
         checkMap = new HashMap<>(1200);
         for (Application a : applications) {
             for (SatConstraint s : a.getConstraints()) {
@@ -196,7 +196,7 @@ public abstract class ReconfigurationScenario implements Runnable {
         sb.append(String.format("%f\t%f\t", load[0], load[1]));
         load = currentLoad(plan.getResult());
         sb.append(String.format("%f\t%f\t", load[0], load[1]));
-        SolvingStatistics statistics = cra.getSolvingStatistics();
+        SolvingStatistics statistics = cra.getStatistics();
         sb.append(String.format("%d\t%d\t%d\n", statistics.getSolvingDuration(), plan.getDuration(), plan.getSize()));
     }
 

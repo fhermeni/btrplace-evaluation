@@ -125,14 +125,14 @@ public class TestBtrPlace {
             model.getMapping().addReadyVM(e);
         }
         Running run = new Running(vms);
-        Overbook overbook = new Overbook(model.getNodes(), "cpu", 4);
+        Overbook overbook = new Overbook(model.getMapping().getAllNodes(), "cpu", 4);
         Collection<SatConstraint> VMconstraints = new ArrayList<>();
         //VMconstraints.add(overbook);
         VMconstraints.add(run);
         ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
         ReconfigurationPlan plan = cra.solve(model, VMconstraints);
         Assert.assertNotNull(plan);
-        System.out.println(cra.getSolvingStatistics());
+        System.out.println(cra.getStatistics());
 //      /  System.out.println(plan.getResult().getMapping());
         Mapping mapping = plan.getResult().getMapping();
         Set<Node> onlineNodes = mapping.getOnlineNodes();
@@ -149,8 +149,8 @@ public class TestBtrPlace {
 
         ShareableResource cpu = new ShareableResource("cpu", 8, 1);
         ShareableResource ram = new ShareableResource("ram", 32, 1);
-        Overbook overcpu = new Overbook(model.getNodes(), "cpu", 4);
-        Overbook overram = new Overbook(model.getNodes(), "ram", 4);
+        Overbook overcpu = new Overbook(model.getMapping().getAllNodes(), "cpu", 4);
+        Overbook overram = new Overbook(model.getMapping().getAllNodes(), "ram", 4);
 //        ShareableResource cpu = new ShareableResource("cpu", 32, 1);
 //        ShareableResource ram = new ShareableResource("ram", 128, 1);
         model.attach(cpu);
@@ -172,7 +172,7 @@ public class TestBtrPlace {
         Set<VM> allVMs = model.getMapping().getAllVMs();
         Lonely lonely = new Lonely(vms);
         Running run = new Running(allVMs);
-        SingleResourceCapacity srec = new SingleResourceCapacity(model.getNodes(), "cpu", 30);
+        SingleResourceCapacity srec = new SingleResourceCapacity(model.getMapping().getAllNodes(), "cpu", 30);
         ArrayList<SatConstraint> constraints = new ArrayList<>();
 
         constraints.addAll(Arrays.asList(lonely, run, srec, overcpu, overram));
@@ -233,15 +233,15 @@ public class TestBtrPlace {
             Application app = new Application(model, i);
             constraints.add(new Running(app.getAllVM()));
         }
-        SingleResourceCapacity SReC = new SingleResourceCapacity(model.getNodes(), "cpu", 30);
-        SingleResourceCapacity SReC2 = new SingleResourceCapacity(model.getNodes(), "ram", 120);
-        MaxOnline maxOnline = new MaxOnline(model.getNodes(), 250);
+        SingleResourceCapacity SReC = new SingleResourceCapacity(model.getMapping().getAllNodes(), "cpu", 30);
+        SingleResourceCapacity SReC2 = new SingleResourceCapacity(model.getMapping().getAllNodes(), "ram", 120);
+        MaxOnline maxOnline = new MaxOnline(model.getMapping().getAllNodes(), 250);
         constraints.add(SReC);
         constraints.add(SReC2);
         constraints.add(maxOnline);
 
         ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
-        cra.getSatConstraintMapper().register(new CMaxOnlines.Builder());
+        cra.getConstraintMapper().register(new CMaxOnlines.Builder());
         ReconfigurationPlan solve = null;
         try {
             solve = cra.solve(model, constraints);
@@ -296,15 +296,15 @@ public class TestBtrPlace {
             Application app = new Application(model, i);
             constraints.add(new Running(app.getAllVM()));
         }
-        SingleResourceCapacity SReC = new SingleResourceCapacity(model.getNodes(), "cpu", 60);
-        SingleResourceCapacity SReC2 = new SingleResourceCapacity(model.getNodes(), "ram", 120);
-        MaxOnline maxOnline = new MaxOnline(model.getNodes(), 240);
+        SingleResourceCapacity SReC = new SingleResourceCapacity(model.getMapping().getAllNodes(), "cpu", 60);
+        SingleResourceCapacity SReC2 = new SingleResourceCapacity(model.getMapping().getAllNodes(), "ram", 120);
+        MaxOnline maxOnline = new MaxOnline(model.getMapping().getAllNodes(), 240);
         constraints.add(SReC);
         constraints.add(SReC2);
         constraints.add(maxOnline);
 
         ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
-        cra.getSatConstraintMapper().register(new CMaxOnlines.Builder());
+        cra.getConstraintMapper().register(new CMaxOnlines.Builder());
         ReconfigurationPlan solve = null;
         try {
             solve = cra.solve(model, constraints);

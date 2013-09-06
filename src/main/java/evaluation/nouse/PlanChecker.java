@@ -1,7 +1,7 @@
 package evaluation.nouse;
 
 import btrplace.json.JSONConverterException;
-import btrplace.json.model.constraint.SatConstraintsConverter;
+import btrplace.json.model.constraint.ConstraintsConverter;
 import btrplace.json.plan.ReconfigurationPlanConverter;
 import btrplace.model.constraint.SatConstraint;
 import btrplace.plan.ReconfigurationPlan;
@@ -30,7 +30,7 @@ public class PlanChecker {
         parseOptions(args);
 
         ReconfigurationPlanConverter planConverter = new ReconfigurationPlanConverter();
-        SatConstraintsConverter satConstraintsConverter = new SatConstraintsConverter();
+        ConstraintsConverter satConstraintsConverter = new ConstraintsConverter();
         try {
             Set<SatConstraint> dConstr = new HashSet<SatConstraint>();
             ReconfigurationPlan plan = planConverter.fromJSON(new File(plan_file));

@@ -2,7 +2,7 @@ package evaluation.nouse;
 
 import btrplace.json.JSONConverterException;
 import btrplace.json.model.ModelConverter;
-import btrplace.json.model.constraint.SatConstraintsConverter;
+import btrplace.json.model.constraint.ConstraintsConverter;
 import btrplace.model.Model;
 import btrplace.model.constraint.*;
 import evaluation.generator.ModelGenerator;
@@ -130,7 +130,7 @@ public class MCGenerator {
     }
 
     public static void recordConstraints(Set<SatConstraint> constraints) {
-        SatConstraintsConverter converter = new SatConstraintsConverter();
+        ConstraintsConverter converter = new ConstraintsConverter();
         try {
             converter.toJSON(constraints, new File(constraint_name + "Constraint.json"));
 

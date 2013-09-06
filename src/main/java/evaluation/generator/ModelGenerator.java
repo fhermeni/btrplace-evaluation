@@ -42,7 +42,7 @@ public class ModelGenerator {
         }
         else generateIdentical(model, cpus, mems);
 
-        Running run = new Running(model.getVMs());
+        Running run = new Running(model.getMapping().getAllVMs());
         ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
         try {
             ReconfigurationPlan plan = cra.solve(model, new HashSet<SatConstraint>(Collections.singleton(run)));

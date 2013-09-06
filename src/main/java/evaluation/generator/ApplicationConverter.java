@@ -3,7 +3,7 @@ package evaluation.generator;
 import btrplace.json.AbstractJSONObjectConverter;
 import btrplace.json.JSONArrayConverter;
 import btrplace.json.JSONConverterException;
-import btrplace.json.model.constraint.SatConstraintsConverter;
+import btrplace.json.model.constraint.ConstraintsConverter;
 import btrplace.model.Model;
 import btrplace.model.constraint.SatConstraint;
 import evaluation.demo.Application;
@@ -41,7 +41,7 @@ public class ApplicationConverter extends AbstractJSONObjectConverter<Applicatio
     }
 
     private Object constraintsToJSON(Collection<SatConstraint> constraints) throws JSONConverterException {
-        SatConstraintsConverter converter = new SatConstraintsConverter();
+        ConstraintsConverter converter = new ConstraintsConverter();
         return converter.toJSON(constraints);
     }
 
@@ -57,7 +57,7 @@ public class ApplicationConverter extends AbstractJSONObjectConverter<Applicatio
     }
 
     private Collection<SatConstraint> requiredConStraint(JSONObject o, String id) throws JSONConverterException {
-        SatConstraintsConverter converter = new SatConstraintsConverter();
+        ConstraintsConverter converter = ConstraintsConverter.newBundle();
         converter.setModel(getModel());
         Object x = o.get(id);
         if (!(x instanceof JSONArray)) {
@@ -103,7 +103,7 @@ public class ApplicationConverter extends AbstractJSONObjectConverter<Applicatio
     }
 
     @Override
-    public List<Application> listFromJSON(Reader r) throws IOException, JSONConverterException {
+    public List<Application> listFromJSON(Reader r) throws JSONConverterException {
         try {
             JSONParser p = new JSONParser(JSONParser.MODE_RFC4627);
             Object o = p.parse(r);
