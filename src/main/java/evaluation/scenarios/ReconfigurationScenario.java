@@ -51,7 +51,7 @@ public abstract class ReconfigurationScenario implements Runnable {
         outPath = out;
         sb = new StringBuilder();
         cra.setTimeLimit(TIME_OUT);
-        cra.doRepair(true);
+        cra.doRepair(false);
     }
 
     abstract boolean reconfigure(int p, boolean c);
