@@ -114,7 +114,7 @@ public class InstanceMaker implements Runnable {
         initMap();
         runMix();
         float[] load = currentLoad();
-        System.out.printf("%f, %f\n", load[0], load[1]);
+        //System.out.printf("%f, %f\n", load[0], load[1]);
         try {
             storeModel2(path);
         } catch (Exception e) {

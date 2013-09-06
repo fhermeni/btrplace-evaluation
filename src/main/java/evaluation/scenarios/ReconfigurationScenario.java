@@ -16,7 +16,6 @@ import btrplace.solver.choco.constraint.CMaxOnlines;
 import btrplace.solver.choco.runner.SolvingStatistics;
 import evaluation.demo.Application;
 import evaluation.generator.ApplicationConverter;
-import evaluation.generator.ConverterTools;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
@@ -83,11 +82,9 @@ public abstract class ReconfigurationScenario implements Runnable {
             JSONObject o = (JSONObject) p.parse(new BufferedReader(new FileReader(instance)));
             ModelConverter mc = new ModelConverter();
 
-            model = mc.fromJSON((JSONObject) o.get("model"));//ConverterTools.getModelFromFile(inModel);
-            //validateConstraint = ConverterTools.getConstraints(model, path + "constraints" + id + ".json");
+            model = mc.fromJSON((JSONObject) o.get("model"));
             ApplicationConverter ac = new ApplicationConverter(model);
             applications = ac.listFromJSON((JSONArray) o.get("slas"));
-            //applications = ConverterTools.getApplicationsFromFile(model, inApp);
             ecu = (ShareableResource) model.getView(ShareableResource.VIEW_ID_BASE + "ecu");
             ram = (ShareableResource) model.getView(ShareableResource.VIEW_ID_BASE + "ram");
             cra.getConstraintMapper().register(new CMaxOnlines.Builder());
@@ -158,14 +155,7 @@ public abstract class ReconfigurationScenario implements Runnable {
         if (outPath != null) {
             pc.toJSON(plan, new BufferedWriter(new FileWriter(outPath)));
         }
-        /*if (outPath != null) {
-            StringBuilder name = new StringBuilder(new File(inModel).getName());
-            name.delete(name.lastIndexOf("."), name.length());
-            String filename = String.format("%s%s%d%b", name, rp_type, TIME_OUT, findContinuous);
-            ConverterTools.planToFile(plan, outPath + filename + "plan.json");
-        } */
-
-        sb.append(String.format("%d\t", modelId));
+        sb.append(String.format("%s\t", instance));
         sb.append(String.format("%d\t%d\t%d\t", vc[0].size(), vc[1].size(), vc[2].size()));
         sb.append(String.format("%d\t%d\t%d\t", dc[0], dc[1], app.size()));
         float[] load = currentLoad(model);
