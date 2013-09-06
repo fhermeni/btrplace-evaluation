@@ -9,17 +9,6 @@ to the hardware failures or increasing in the workload of VMs.
 
 #Evaluation Protocol
 To evaluation Btrplace, We use the specification of the commodity server. The work-node specification details are listed below.
-node:  64 cores, 128 GB of memory.   
-**Server Summary**
-<table>
-  <tr>
-    <th>#Cores</th>
-    <th>RAM</th>
-  </tr>
-  <tr>
-    <td>64</td>
-  <td>128 GB</td>
-</table>
 
 **Datacenter configuration**   
 The datacenter consists of 256 working nodes mounted equally in 16 racks. The datacenter is divided into 2 zones each contains 8 racks. 
@@ -61,16 +50,16 @@ The evaluation contains:
 * ModelMaker
 * Evaluator
 
-**modelMaker:**  Generates a model and constraints associates with the model. Each application contains 3 Spread constraints (1 per tier), 1 Among constraint (tier-3). 25% of applications have a splitAmong constraint (two instances of the application place on distinct zones). The datacenter has 1 a SingleResourceCapacity to limit the resource provision of each node (60 ucpu, 120 GB RAM) and a MaxOnlines constraint to limit the number of online nodes to 240.
+**instanceMaker:**  Generates a model and constraints associates with the model. Each application contains 3 Spread constraints (1 per tier), 1 Among constraint (tier-3). 25% of applications have a splitAmong constraint (two instances of the application place on distinct zones). The datacenter has 1 a SingleResourceCapacity to limit the resource provision of each node (60 ucpu, 120 GB RAM) and a MaxOnlines constraint to limit the number of online nodes to 240.
 
 **evaluator:** performs the evaluation according the passed arguments. The evaluator creates change in datacenter's environment (workload, failure, bootstorm) and reconfigures the datacenters. Futhermore, the evaluator checks for temporary violations of the constraints and records the reconfiguration plan in an output file.
 
 
 ## Usage
-`./modelMaker [-r number of racks] [-p number of node per rack] [-a number of applications] -o ouput.json`
+`./instanceMaker [-r number of racks] [-p number of node per rack] [-a number of applications] -o ouput.json`
 Generator an instance. The resulting JSON file is stored in `output.json`
 
-*Example:* `modelMaker -r 16 -p 16 -a 350 -o foo.json`
+*Example:* `instanceMaker -r 16 -p 16 -a 350 -o foo.json`
 Produce an instance stored in `foo.json`. The model consists consists of 16 racks, 16 nodes per rack, and 350 Applications.
 
 `./evaluator [-c] [-t timeout] [-o output] -i instance -a constraints -s scenario `

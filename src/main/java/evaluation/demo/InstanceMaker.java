@@ -10,7 +10,6 @@ import btrplace.solver.SolverException;
 import btrplace.solver.choco.ChocoReconfigurationAlgorithm;
 import btrplace.solver.choco.DefaultChocoReconfigurationAlgorithm;
 import evaluation.generator.ApplicationConverter;
-import evaluation.generator.ConverterTools;
 import net.minidev.json.JSONObject;
 import org.apache.commons.cli.*;
 
@@ -26,7 +25,7 @@ import java.util.Set;
  * Date: 6/11/13
  * Time: 10:14 PM
  */
-public class ModelMaker implements Runnable {
+public class InstanceMaker implements Runnable {
 
     static int NUM_RACK = 16;
     static int NUM_APP = 350;
@@ -44,11 +43,11 @@ public class ModelMaker implements Runnable {
     ShareableResource ram;
     private int modelId;
 
-    public ModelMaker(int id) {
+    public InstanceMaker(int id) {
         this(id, 16, 16, 350, System.getProperty("user.home"));
     }
 
-    public ModelMaker(int id, int r, int npr, int app, String out) {
+    public InstanceMaker(int id, int r, int npr, int app, String out) {
         model = new DefaultModel();
         modelId = id;
         NODES_PER_RACK = npr;
@@ -101,14 +100,14 @@ public class ModelMaker implements Runnable {
         catch(ParseException e) {
             System.err.println(e.getMessage());
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp(ModelMaker.class.getSimpleName(), options);
+            formatter.printHelp(InstanceMaker.class.getSimpleName(), options);
             System.exit(1);
         } catch (Exception e) {
             System.err.println(e.getMessage());
             System.exit(1);
         }
-        ModelMaker modelMaker = new ModelMaker(0, racks, rpn, app, out);
-        modelMaker.run();
+        InstanceMaker instanceMaker = new InstanceMaker(0, racks, rpn, app, out);
+        instanceMaker.run();
     }
 
     public void run() {
