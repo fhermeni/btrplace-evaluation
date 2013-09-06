@@ -50,36 +50,34 @@ affect the performance of the applications. The consolidation manager need to re
 **Evaluation**
 In each scenario, we record the reconfiguration plans computed by BtrPlace both for discrete restriction
 and continuous restriction of the constraints. 
-We count the number of SLAs temporary violated, particullarly the constraints composing the SLAs are violated.
+We count the number of SLAs temporary violated, particularly the constraints composing the SLAs are violated.
 After that, we compare the time needed to compute the plans, and to
 complete the reconfiguration process. Additionally, we compare the number of actions and the dependency between the action
 specified in the plans.
 
 ## Tools
 
-The evaluation contain:  
+The evaluation contains:
 * ModelMaker
 * Evaluator
 
-**ModelMaker:**  Generates a model and constraints associates with the model. Each application contains 3 Spread constraints (1 per tier), 1 Among constraint (tier-3). 25% of applications have a splitAmong constraint (two instances of the application place on distinct zones). The datacenter has 1 a SingleResourceCapacity to limit the resource provision of each node (60 ucpu, 120 GB RAM) and a MaxOnlines constraint to limit the number of online nodes to 240.
+**modelMaker:**  Generates a model and constraints associates with the model. Each application contains 3 Spread constraints (1 per tier), 1 Among constraint (tier-3). 25% of applications have a splitAmong constraint (two instances of the application place on distinct zones). The datacenter has 1 a SingleResourceCapacity to limit the resource provision of each node (60 ucpu, 120 GB RAM) and a MaxOnlines constraint to limit the number of online nodes to 240.
 
-**Evaluator:** performs the evaluation according the passed arguments. The evaluator creates change in datacenter's environment (workload, failure, bootstorm) and reconfigures the datacenters. Futhermore, the evaluator checks for temporary violations of the constraints and records the reconfiguration plan in an output file.
+**evaluator:** performs the evaluation according the passed arguments. The evaluator creates change in datacenter's environment (workload, failure, bootstorm) and reconfigures the datacenters. Futhermore, the evaluator checks for temporary violations of the constraints and records the reconfiguration plan in an output file.
 
 
 ## Usage
-**ModelMaker** [-i identifier] [-r number of racks] [-p number of node per rack] [-a number of applications]
-Generator a model with the identifier equals to number i.
+`./modelMaker [-r number of racks] [-p number of node per rack] [-a number of applications] -o ouput.json`
+Generator an instance. The resulting JSON file is stored in `output.json`
 
-*Example:* ModelMaker -i 2 -r 16 -p 16 -a 350   
-Produce a model with identifier of 2 and consists of 16 racks, 16 nodes per rack, and 350 Applications.
+*Example:* `modelMaker -r 16 -p 16 -a 350 -o foo.json`
+Produce an instance stored in `foo.json`. The model consists consists of 16 racks, 16 nodes per rack, and 350 Applications.
 
-**Evaluator** [-c] [-s scenario] [-t timeout] [-o output] -m model -a constraints  
+`./evaluator [-c] [-t timeout] [-o output] -i instance -a constraints -s scenario `
 -c  find the reconfiguration plan with continuous restriction   
 -t  solver timeout  
--m  input Model  
--a  input Application constraints  
--o  output path for the result  
--e  the reconfiguration scenario. It consists of [ve,he,sf,bs]  
+-o  output path for the result
+-s  the reconfiguration scenario. It consists of [ve,he,sf,bs]
 
-  *Example:* Evaluator -m model.json -a application.json -s ve -t 60 -o result
+*Example:* `Evaluator -m model.json -a application.json -s ve -t 60 -o result`
 

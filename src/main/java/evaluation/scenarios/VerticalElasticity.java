@@ -1,12 +1,15 @@
 package evaluation.scenarios;
 
+import btrplace.json.JSONConverterException;
 import btrplace.model.VM;
 import btrplace.model.constraint.Preserve;
 import btrplace.model.constraint.SatConstraint;
 import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
 import evaluation.demo.Application;
+import net.minidev.json.parser.ParseException;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -17,20 +20,12 @@ import java.util.*;
 public class VerticalElasticity extends ReconfigurationScenario {
 
 
-    public VerticalElasticity(String mfile, String appFile, String out) {
-        super(mfile, appFile, out);
+    public VerticalElasticity(String in, String out) throws ParseException, IOException, JSONConverterException {
+        super(in, out);
         rp_type = "ve";
     }
 
-    public static void main(String[] args) {
-        ReconfigurationScenario instance = new VerticalElasticity(args[0], args[1], args[2]);
-        instance.findContinuous();
-        instance.run();
-    }
-
-
     public void run() {
-        readData();
         int p = 10;
         if (findContinuous) {
             reconfigure(p, true);
@@ -83,16 +78,13 @@ public class VerticalElasticity extends ReconfigurationScenario {
             } else {
                 checkSatisfaction(plan, violatedConstraints, DCconstraint, affectedApps);
             }
+            result(plan, violatedConstraints, DCconstraint, affectedApps);
         } catch (SolverException e) {
             sb.append(String.format("%d\t%s\n", modelId, e.getMessage()));
             return false;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        result(plan, violatedConstraints, DCconstraint, affectedApps);
         return satisfied;
-    }
-
-    @Override
-    public String toString() {
-        return sb.toString();
     }
 }

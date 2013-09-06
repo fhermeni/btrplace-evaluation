@@ -3,7 +3,6 @@ package evaluation.demo;
 import evaluation.scenarios.*;
 import org.apache.commons.cli.*;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
@@ -18,15 +17,17 @@ public class Evaluator {
         StringBuilder output = new StringBuilder();
         int timeout = 0;
         boolean cont = false;
-        String mfile = null;
-        String appFile = null;
         String out = null;
+        String in = null;
         Options options = new Options();
-        options.addOption("s", true, "Reconfiguration Scenario");
+        Option o = new Option("s", true, "Reconfiguration Scenario");
+        o.setRequired(true);
+        options.addOption(o);
         options.addOption("t", true, "Solver timeout");
         options.addOption("c", false, "Continuous restriction");
-        options.addOption("m", true, "Input model");
-        options.addOption("a", true, "Input application constraints");
+        o = new Option("i", true, "instance");
+        o.setRequired(true);
+        options.addOption(o);
         options.addOption("o", true, "Output path for result");
 
         CommandLineParser parser = new BasicParser();
@@ -41,11 +42,8 @@ public class Evaluator {
             if (line.hasOption("t")) {
                 timeout = Integer.parseInt(line.getOptionValue("t"));
             }
-            if (line.hasOption("m")) {
-                mfile = line.getOptionValue("m");
-            }
-            if (line.hasOption("a")) {
-                appFile = line.getOptionValue("a");
+            if (line.hasOption("i")) {
+                in = line.getOptionValue("i");
             }
             if (line.hasOption("o")) {
                 out = line.getOptionValue("o");
@@ -53,8 +51,8 @@ public class Evaluator {
         } catch (ParseException e) {
             System.err.println(e.getMessage());
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("Evaluator", options);
-            System.exit(0);
+            formatter.printHelp(Evaluator.class.getSimpleName(), options);
+            System.exit(1);
         }
 
 
@@ -62,34 +60,36 @@ public class Evaluator {
         if (cont) ReconfigurationScenario.findContinuous();
         ReconfigurationScenario rs;
 
+        try {
         switch (type) {
             case ve:
-                rs = new VerticalElasticity(mfile, appFile, out);
+                rs = new VerticalElasticity(in, out);
                 rs.run();
-                output.append(rs.toString());
+                output.append(rs);
                 break;
             case he:
-                rs = new HorizontalElasticity(mfile, appFile, out);
+                rs = new HorizontalElasticity(in, out);
                 rs.run();
-                output.append(rs.toString());
+                output.append(rs);
                 break;
             case sf:
-                rs = new ServerFailures(mfile, appFile, out);
+                rs = new ServerFailures(in, out);
                 rs.run();
-                output.append(rs.toString());
+                output.append(rs);
                 break;
             case bs:
-                rs = new BootStorm(mfile, appFile, out);
+                rs = new BootStorm(in, out);
                 rs.run();
-                output.append(rs.toString());
+                output.append(rs);
                 break;
         }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
         if (out != null) {
-            StringBuilder name = new StringBuilder(new File(mfile).getName());
-            name.delete(name.lastIndexOf("."), name.length());
-            String filename = String.format("%s%s%d%b", name, type, timeout, cont);
             try {
-                FileWriter toFile = new FileWriter(out + filename + ".txt");
+                FileWriter toFile = new FileWriter(out + ".txt");
                 toFile.write(output.toString());
                 toFile.close();
             } catch (IOException e) {

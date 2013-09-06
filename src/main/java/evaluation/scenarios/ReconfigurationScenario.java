@@ -1,5 +1,8 @@
 package evaluation.scenarios;
 
+import btrplace.json.JSONConverterException;
+import btrplace.json.model.ModelConverter;
+import btrplace.json.plan.ReconfigurationPlanConverter;
 import btrplace.model.Mapping;
 import btrplace.model.Model;
 import btrplace.model.Node;
@@ -12,9 +15,14 @@ import btrplace.solver.choco.DefaultChocoReconfigurationAlgorithm;
 import btrplace.solver.choco.constraint.CMaxOnlines;
 import btrplace.solver.choco.runner.SolvingStatistics;
 import evaluation.demo.Application;
+import evaluation.generator.ApplicationConverter;
 import evaluation.generator.ConverterTools;
+import net.minidev.json.JSONArray;
+import net.minidev.json.JSONObject;
+import net.minidev.json.parser.JSONParser;
+import net.minidev.json.parser.ParseException;
 
-import java.io.File;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -36,13 +44,12 @@ public abstract class ReconfigurationScenario implements Runnable {
     ShareableResource ecu;
     ShareableResource ram;
     String rp_type;
-    String inModel;
-    String inApp;
+    String instance;
     String outPath;
 
-    public ReconfigurationScenario(String in_model, String in_app, String out) {
-        inModel = in_model;
-        inApp = in_app;
+    public ReconfigurationScenario(String instance, String out) throws ParseException, IOException, JSONConverterException {
+        this.instance = instance;
+        readData();
         outPath = out;
         sb = new StringBuilder();
         cra.setTimeLimit(TIME_OUT);
@@ -71,28 +78,33 @@ public abstract class ReconfigurationScenario implements Runnable {
         TIME_OUT = timeout;
     }
 
-    public void readData() {
+    public void readData() throws JSONConverterException, ParseException, IOException {
+            JSONParser p = new JSONParser(JSONParser.MODE_RFC4627);
+            JSONObject o = (JSONObject) p.parse(new BufferedReader(new FileReader(instance)));
+            ModelConverter mc = new ModelConverter();
 
-        model = ConverterTools.getModelFromFile(inModel);
-//        validateConstraint = ConverterTools.getConstraints(model, path + "constraints" + id + ".json");
-        applications = ConverterTools.getApplicationsFromFile(model, inApp);
-        ecu = (ShareableResource) model.getView(ShareableResource.VIEW_ID_BASE + "ecu");
-        ram = (ShareableResource) model.getView(ShareableResource.VIEW_ID_BASE + "ram");
-        cra.getConstraintMapper().register(new CMaxOnlines.Builder());
-        checkMap = new HashMap<>(1200);
-        for (Application a : applications) {
-            for (SatConstraint s : a.getConstraints()) {
-                checkMap.put(s, a.getId());
+            model = mc.fromJSON((JSONObject) o.get("model"));//ConverterTools.getModelFromFile(inModel);
+            //validateConstraint = ConverterTools.getConstraints(model, path + "constraints" + id + ".json");
+            ApplicationConverter ac = new ApplicationConverter(model);
+            applications = ac.listFromJSON((JSONArray) o.get("slas"));
+            //applications = ConverterTools.getApplicationsFromFile(model, inApp);
+            ecu = (ShareableResource) model.getView(ShareableResource.VIEW_ID_BASE + "ecu");
+            ram = (ShareableResource) model.getView(ShareableResource.VIEW_ID_BASE + "ram");
+            cra.getConstraintMapper().register(new CMaxOnlines.Builder());
+            checkMap = new HashMap<>(1200);
+            for (Application a : applications) {
+                for (SatConstraint s : a.getConstraints()) {
+                    checkMap.put(s, a.getId());
+                }
             }
-        }
-        Set<Node> allNodes = model.getMapping().getAllNodes();
-        SingleResourceCapacity SReC = new SingleResourceCapacity(allNodes, "ecu", 60, false);
-        SingleResourceCapacity SReC2 = new SingleResourceCapacity(allNodes, "ram", 120, false);
-        MaxOnline maxOnline = new MaxOnline(allNodes, 240, false);
-        checkMap.put(SReC, 1000);
-        checkMap.put(SReC2, 1000);
-        checkMap.put(maxOnline, 1000);
-        validateConstraint = checkMap.keySet();
+            Set<Node> allNodes = model.getMapping().getAllNodes();
+            SingleResourceCapacity SReC = new SingleResourceCapacity(allNodes, "ecu", 60, false);
+            SingleResourceCapacity SReC2 = new SingleResourceCapacity(allNodes, "ram", 120, false);
+            MaxOnline maxOnline = new MaxOnline(allNodes, 240, false);
+            checkMap.put(SReC, 1000);
+            checkMap.put(SReC2, 1000);
+            checkMap.put(maxOnline, 1000);
+            validateConstraint = checkMap.keySet();
     }
 
     public void checkSatisfaction(ReconfigurationPlan plan, HashSet<Integer>[] constr,
@@ -140,14 +152,18 @@ public abstract class ReconfigurationScenario implements Runnable {
     }
 
     public void result(ReconfigurationPlan plan, HashSet<Integer>[] vc,
-                       int[] dc, HashSet<Integer> app) {
+                       int[] dc, HashSet<Integer> app) throws IOException, JSONConverterException {
 
+        ReconfigurationPlanConverter pc = new ReconfigurationPlanConverter();
         if (outPath != null) {
+            pc.toJSON(plan, new BufferedWriter(new FileWriter(outPath)));
+        }
+        /*if (outPath != null) {
             StringBuilder name = new StringBuilder(new File(inModel).getName());
             name.delete(name.lastIndexOf("."), name.length());
             String filename = String.format("%s%s%d%b", name, rp_type, TIME_OUT, findContinuous);
             ConverterTools.planToFile(plan, outPath + filename + "plan.json");
-        }
+        } */
 
         sb.append(String.format("%d\t", modelId));
         sb.append(String.format("%d\t%d\t%d\t", vc[0].size(), vc[1].size(), vc[2].size()));
@@ -158,6 +174,11 @@ public abstract class ReconfigurationScenario implements Runnable {
         sb.append(String.format("%f\t%f\t", load[0], load[1]));
         SolvingStatistics statistics = cra.getStatistics();
         sb.append(String.format("%d\t%d\t%d\n", statistics.getSolvingDuration(), plan.getDuration(), plan.getSize()));
+    }
+
+    @Override
+    public String toString() {
+        return sb.toString();
     }
 
 }

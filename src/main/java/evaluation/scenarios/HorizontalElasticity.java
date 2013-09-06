@@ -1,5 +1,6 @@
 package evaluation.scenarios;
 
+import btrplace.json.JSONConverterException;
 import btrplace.model.VM;
 import btrplace.model.constraint.Running;
 import btrplace.model.constraint.SatConstraint;
@@ -7,7 +8,9 @@ import btrplace.model.constraint.Spread;
 import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
 import evaluation.demo.Application;
+import net.minidev.json.parser.ParseException;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -19,21 +22,14 @@ public class HorizontalElasticity extends ReconfigurationScenario {
 
     Collection<VM> cloneVMs;
 
-    public HorizontalElasticity(String mfile, String appFile, String out) {
-        super(mfile, appFile, out);
+    public HorizontalElasticity(String in, String out) throws ParseException, IOException, JSONConverterException  {
+        super(in, out);
         cloneVMs = new ArrayList<>();
         rp_type = "he";
     }
 
-    public static void main(String[] args) {
-        HorizontalElasticity he = new HorizontalElasticity(args[0], args[1], args[2]);
-//        he.findContinuous();
-        he.run();
-    }
-
     @Override
     public void run() {
-        readData();
         Collections.shuffle((new ArrayList<>(applications)));
         int p = 25;
         int size = applications.size() * p / 100;
@@ -119,18 +115,13 @@ public class HorizontalElasticity extends ReconfigurationScenario {
             } else {
                 checkSatisfaction(plan, violatedConstraints, DCconstraint, affectedApps);
             }
+            result(plan, violatedConstraints, DCconstraint, affectedApps);
         } catch (SolverException e) {
             sb.append(String.format("%d\t%s\n", modelId, e.getMessage()));
             return false;
+        }  catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        result(plan, violatedConstraints, DCconstraint, affectedApps);
-        System.err.println(cra.getStatistics().getParameters().doRepair());
-        System.err.println(cra.getStatistics());
         return satisfied;
-    }
-
-    @Override
-    public String toString() {
-        return sb.toString();
     }
 }

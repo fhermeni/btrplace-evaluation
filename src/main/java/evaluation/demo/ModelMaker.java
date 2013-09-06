@@ -1,5 +1,7 @@
 package evaluation.demo;
 
+import btrplace.json.JSONConverterException;
+import btrplace.json.model.ModelConverter;
 import btrplace.model.*;
 import btrplace.model.constraint.*;
 import btrplace.model.view.ShareableResource;
@@ -7,16 +9,16 @@ import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
 import btrplace.solver.choco.ChocoReconfigurationAlgorithm;
 import btrplace.solver.choco.DefaultChocoReconfigurationAlgorithm;
-import btrplace.solver.choco.constraint.CMaxOnlines;
+import evaluation.generator.ApplicationConverter;
 import evaluation.generator.ConverterTools;
-import org.apache.commons.cli.BasicParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.Options;
+import net.minidev.json.JSONObject;
+import org.apache.commons.cli.*;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -25,7 +27,6 @@ import java.util.Set;
  * Time: 10:14 PM
  */
 public class ModelMaker implements Runnable {
-
 
     static int NUM_RACK = 16;
     static int NUM_APP = 350;
@@ -67,24 +68,23 @@ public class ModelMaker implements Runnable {
     }
 
     public static void main(String[] args) {
-        int id = 1;
+        //int id = 1;
         int racks = 16;
         int rpn = 16;
         int app = 350;
-        StringBuilder out = new StringBuilder();
+        //int nb = 100;
+        String out = "instance.json";
         Options options = new Options();
-        options.addOption("i", true, "instance identifier");
         options.addOption("r", true, "number of racks");
-        options.addOption("p", true, "number of node/pack");
+        options.addOption("p", true, "number of nodes/packs");
         options.addOption("a", true, "number of applications");
-        options.addOption("o", true, "output directory");
+        Option o = new Option("o", true, "output JSON file");
+        o.setRequired(true);
+        options.addOption(o);
 
         CommandLineParser parser = new BasicParser();
         try {
             CommandLine line = parser.parse(options, args);
-            if (line.hasOption("i")) {
-                id = Integer.parseInt(line.getOptionValue("i"));
-            }
             if (line.hasOption("r")) {
                 racks = Integer.parseInt(line.getOptionValue("r"));
             }
@@ -95,14 +95,19 @@ public class ModelMaker implements Runnable {
                 app = Integer.parseInt(line.getOptionValue("a"));
             }
             if (line.hasOption("o")) {
-                out.append(line.getOptionValue("o"));
+                out = line.getOptionValue("o");
             }
         }
-        catch (Exception e) {
-            System.err.println("Argument error: " + e.toString());
-            System.exit(-1);
-            }
-        ModelMaker modelMaker = new ModelMaker(id, racks, rpn, app, out.toString());
+        catch(ParseException e) {
+            System.err.println(e.getMessage());
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp(ModelMaker.class.getSimpleName(), options);
+            System.exit(1);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
+        }
+        ModelMaker modelMaker = new ModelMaker(0, racks, rpn, app, out);
         modelMaker.run();
     }
 
@@ -111,7 +116,11 @@ public class ModelMaker implements Runnable {
         runMix();
         float[] load = currentLoad();
         System.out.printf("%f, %f\n", load[0], load[1]);
-        storeModel(path);
+        try {
+            storeModel2(path);
+        } catch (Exception e) {
+            System.err.println("Unable to generate instance '" + path  +"': " + e.getMessage());
+        }
     }
 
     private void initMap() {
@@ -135,8 +144,6 @@ public class ModelMaker implements Runnable {
     }
 
     private boolean runMix() {
-        cra.getConstraintMapper().register(new CMaxOnlines.Builder());
-        //cra.getConstraintMapper().register(new CMaxSpareResources.Builder());
         Collection<SatConstraint> constraints = new ArrayList<>();
 
         try {
@@ -181,7 +188,6 @@ public class ModelMaker implements Runnable {
         Among among = new Among(app.getTier3(), racks, restriction);
         app.addConstraint(among);
         validateConstraint.add(among);
-//        System.out.println("Among appID:" + app.getId());
     }
 
     private void makeHA(Application app, Collection<SatConstraint> constraints) {
@@ -195,7 +201,6 @@ public class ModelMaker implements Runnable {
         SplitAmong splitAmong = new SplitAmong(vms, groups);
         app.addConstraint(splitAmong);
         validateConstraint.add(splitAmong);
-//        System.out.println("HA:" + app.getId() + "\t" + clone.getId());
     }
 
     private float[] currentLoad() {
@@ -214,39 +219,14 @@ public class ModelMaker implements Runnable {
         return loads;
     }
 
-    private void runApplicationLonely(Application app, Collection<SatConstraint> constraints) {
-        for (VM vm : app.getTier2()) {
-            ecu.setConsumption(vm, 4);
-            ram.setConsumption(vm, 2);
-        }
-
-        for (VM vm : app.getTier3()) {
-            ram.setConsumption(vm, 4);
-        }
-        Running run = new Running(app.getAllVM());
-        Lonely lonely = new Lonely(new HashSet<>(app.getAllVM()));
-        validateConstraint.add(lonely);
-        constraints.add(run);
-    }
-
-
-/*    private void addSplitAmong(Collection<SatConstraint> constraints) {
-        Collection<Collection<VM>> vms = new ArrayList<>();
-        Application app1 = new Application(model);
-        Application app2 = new Application(model);
-        runApplication(app1, constraints);
-        runApplication(app2, constraints);
-        vms.add(app1.getAllVM());
-        vms.add(app2.getAllVM());
-        SplitAmong splitAmong = new SplitAmong(vms, groups);
-        constraints.add(splitAmong);
-        validateConstraint.add(splitAmong);
-    }*/
-
-    private void storeModel(String out) {
-            String path = out +  System.getProperty("file.separator");
-            ConverterTools.modelToFile(model, path + "model" + modelId + ".json");
-            ConverterTools.applicationsToFile(model, appList, path + "applications" + modelId + ".json");
-        System.out.println("Model and Applications are saved in folder: " + out);
+    private void storeModel2(String out) throws IOException, JSONConverterException {
+        JSONObject o = new JSONObject();
+        ModelConverter c = new ModelConverter();
+        ApplicationConverter c2 = new ApplicationConverter(model);
+        o.put("model", c.toJSON(model));
+        o.put("slas", c2.toJSON(appList));
+        BufferedWriter buf = new BufferedWriter(new FileWriter(out));
+        o.writeJSONString(buf);
+        buf.close();
     }
 }

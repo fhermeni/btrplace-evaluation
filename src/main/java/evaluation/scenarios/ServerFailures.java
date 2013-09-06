@@ -1,5 +1,6 @@
 package evaluation.scenarios;
 
+import btrplace.json.JSONConverterException;
 import btrplace.model.Node;
 import btrplace.model.VM;
 import btrplace.model.constraint.Offline;
@@ -7,7 +8,9 @@ import btrplace.model.constraint.Running;
 import btrplace.model.constraint.SatConstraint;
 import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
+import net.minidev.json.parser.ParseException;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -20,21 +23,15 @@ public class ServerFailures extends ReconfigurationScenario {
     Collection<Node> failedNodes;
     Collection<VM> restartVMs;
 
-    public ServerFailures(String mfile, String appFile, String out) {
-        super(mfile, appFile, out);
+    public ServerFailures(String in, String out) throws ParseException, IOException, JSONConverterException {
+        super(in, out);
         failedNodes = new ArrayList<>();
         restartVMs = new ArrayList<>();
         rp_type = "sf";
     }
 
-    public static void main(String[] args) {
-        ReconfigurationScenario instance = new ServerFailures(args[0], args[1], args[2]);
-        instance.run();
-    }
-
     @Override
     public void run() {
-        readData();
         int p = 5;
         List<Node> nodes = new ArrayList<>(model.getMapping().getAllNodes());
         int size = p * nodes.size() / 100;
@@ -97,16 +94,13 @@ public class ServerFailures extends ReconfigurationScenario {
                 }
                 checkSatisfaction(plan, violatedConstraints, DCconstraint, affectedApps);
             }
+            result(plan, violatedConstraints, DCconstraint, affectedApps);
         } catch (SolverException e) {
             sb.append(String.format("%d\t%s\n", modelId, e.getMessage()));
             return false;
+        }  catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        result(plan, violatedConstraints, DCconstraint, affectedApps);
         return satisfied;
-    }
-
-    @Override
-    public String toString() {
-        return sb.toString();
     }
 }

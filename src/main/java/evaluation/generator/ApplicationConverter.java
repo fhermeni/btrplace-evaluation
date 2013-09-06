@@ -41,7 +41,7 @@ public class ApplicationConverter extends AbstractJSONObjectConverter<Applicatio
     }
 
     private Object constraintsToJSON(Collection<SatConstraint> constraints) throws JSONConverterException {
-        ConstraintsConverter converter = new ConstraintsConverter();
+        ConstraintsConverter converter = ConstraintsConverter.newBundle();
         return converter.toJSON(constraints);
     }
 

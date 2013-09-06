@@ -24,34 +24,16 @@
             <groupId>btrplace</groupId>
             <artifactId>solver-api</artifactId>
             <version>0.32-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>ch.qos.logback</groupId>
-                    <artifactId>logback-classic</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>btrplace</groupId>
             <artifactId>solver-choco</artifactId>
             <version>0.32-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>ch.qos.logback</groupId>
-                    <artifactId>logback-classic</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>btrplace</groupId>
             <artifactId>solver-json</artifactId>
             <version>0.32-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>ch.qos.logback</groupId>
-                    <artifactId>logback-classic</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <dependency>
