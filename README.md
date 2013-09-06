@@ -52,7 +52,7 @@ The evaluation contains:
 
 **instanceMaker:**  Generates a model and constraints associates with the model. Each application contains 3 Spread constraints (1 per tier), 1 Among constraint (tier-3). 25% of applications have a splitAmong constraint (two instances of the application place on distinct zones). The datacenter has 1 a SingleResourceCapacity to limit the resource provision of each node (60 ucpu, 120 GB RAM) and a MaxOnlines constraint to limit the number of online nodes to 240.
 
-```sh
+```
 $ ./instanceMaker
 Missing required option: o
 usage: InstanceMaker
@@ -64,7 +64,7 @@ usage: InstanceMaker
 
 **evaluator:** performs the evaluation according the passed arguments. The evaluator creates change in datacenter's environment (workload, failure, bootstorm) and reconfigures the datacenters. Futhermore, the evaluator checks for temporary violations of the constraints and records the reconfiguration plan in an output file.
 
-```sh
+```
 $ ./evaluator
 Missing required options: s, i
 usage: Evaluator
@@ -74,7 +74,7 @@ usage: Evaluator
  -r <arg>   output file for the resulting data
  -s <arg>   Reconfiguration Scenario (he, ve, sf, bs)
  -t <arg>   Solver timeout in seconds
-``
+```
 
 Resulting data are separated with tabulations. Fields description:
 
