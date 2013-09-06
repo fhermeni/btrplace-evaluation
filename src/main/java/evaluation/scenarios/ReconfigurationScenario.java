@@ -31,8 +31,8 @@ import java.util.*;
  */
 public abstract class ReconfigurationScenario implements Runnable {
 
-    static int TIME_OUT = 3600;
-    protected static boolean findContinuous = false;
+    protected int TIME_OUT = 3600;
+    protected boolean findContinuous = false;
     Model model;
     Set<SatConstraint> validateConstraint;
     Map<SatConstraint, Integer> checkMap;
@@ -72,7 +72,7 @@ public abstract class ReconfigurationScenario implements Runnable {
         return loads;
     }
 
-    public static void setTimeOut(int timeout) {
+    public void setTimeOut(int timeout) {
         TIME_OUT = timeout;
     }
 
@@ -129,7 +129,7 @@ public abstract class ReconfigurationScenario implements Runnable {
         }
     }
 
-    public static void findContinuous() {
+    public void findContinuous() {
         findContinuous = true;
     }
 
@@ -156,15 +156,19 @@ public abstract class ReconfigurationScenario implements Runnable {
             pc.toJSON(plan, b);
             b.close();
         }
-        sb.append(String.format("%s\t", new File(instance).getName()));
+        sb.append(String.format("%s\t%s\t%d\t", new File(instance).getName(), rp_type, findContinuous ? 1 : 0));
+        //0: spread, 1: among, 2: splitAmong
         sb.append(String.format("%d\t%d\t%d\t", vc[0].size(), vc[1].size(), vc[2].size()));
+        //0: singleResourceCapacity, 1: MaxOnline
         sb.append(String.format("%d\t%d\t%d\t", dc[0], dc[1], app.size()));
         float[] load = currentLoad(model);
+        //0: ecu, 1: ram
         sb.append(String.format("%f\t%f\t", load[0], load[1]));
         load = currentLoad(plan.getResult());
+        //0: ecu, 1: ram
         sb.append(String.format("%f\t%f\t", load[0], load[1]));
-        SolvingStatistics statistics = cra.getStatistics();
-        sb.append(String.format("%d\t%d\t%d\n", statistics.getSolvingDuration(), plan.getDuration(), plan.getSize()));
+        SolvingStatistics st = cra.getStatistics();
+        sb.append(String.format("%d\t%d\t%d\t%d\t%d\n", st.getCoreRPBuildDuration(), st.getSpeRPDuration(), st.getSolvingDuration(), plan.getDuration(), plan.getSize()));
     }
 
     @Override

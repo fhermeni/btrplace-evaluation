@@ -21,10 +21,10 @@ public class Evaluator {
         String in = null;
         String plan = null;
         Options options = new Options();
-        Option o = new Option("s", true, "Reconfiguration Scenario");
+        Option o = new Option("s", true, "Reconfiguration Scenario (he, ve, sf, bs)");
         o.setRequired(true);
         options.addOption(o);
-        options.addOption("t", true, "Solver timeout");
+        options.addOption("t", true, "Solver timeout in seconds");
         options.addOption("c", false, "Continuous restriction");
         o = new Option("i", true, "instance");
         o.setRequired(true);
@@ -60,34 +60,27 @@ public class Evaluator {
             System.exit(1);
         }
 
-
-        ReconfigurationScenario.setTimeOut(timeout);
-        if (cont) ReconfigurationScenario.findContinuous();
         ReconfigurationScenario rs = null;
 
         try {
         switch (type) {
             case ve:
                 rs = new VerticalElasticity(in, plan);
-                rs.run();
-                output.append(rs);
                 break;
             case he:
                 rs = new HorizontalElasticity(in, plan);
-                rs.run();
-                output.append(rs);
                 break;
             case sf:
                 rs = new ServerFailures(in, plan);
-                rs.run();
-                output.append(rs);
                 break;
             case bs:
                 rs = new BootStorm(in, plan);
-                rs.run();
-                output.append(rs);
                 break;
         }
+        rs.setTimeOut(timeout);
+        if (cont) rs.findContinuous();
+        rs.run();
+        output.append(rs);
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);

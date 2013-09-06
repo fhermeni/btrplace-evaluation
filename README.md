@@ -52,21 +52,47 @@ The evaluation contains:
 
 **instanceMaker:**  Generates a model and constraints associates with the model. Each application contains 3 Spread constraints (1 per tier), 1 Among constraint (tier-3). 25% of applications have a splitAmong constraint (two instances of the application place on distinct zones). The datacenter has 1 a SingleResourceCapacity to limit the resource provision of each node (60 ucpu, 120 GB RAM) and a MaxOnlines constraint to limit the number of online nodes to 240.
 
+```sh
+$ ./instanceMaker
+Missing required option: o
+usage: InstanceMaker
+ -a <arg>   number of applications
+ -o <arg>   output JSON file
+ -p <arg>   number of nodes per rack
+ -r <arg>   number of racks
+```
+
 **evaluator:** performs the evaluation according the passed arguments. The evaluator creates change in datacenter's environment (workload, failure, bootstorm) and reconfigures the datacenters. Futhermore, the evaluator checks for temporary violations of the constraints and records the reconfiguration plan in an output file.
 
+```sh
+$ ./evaluator
+Missing required options: s, i
+usage: Evaluator
+ -c         Continuous restriction
+ -i <arg>   instance
+ -p <arg>   output JSON file for the resulting plan
+ -r <arg>   output file for the resulting data
+ -s <arg>   Reconfiguration Scenario (he, ve, sf, bs)
+ -t <arg>   Solver timeout in seconds
+``
 
-## Usage
-`./instanceMaker [-r number of racks] [-p number of node per rack] [-a number of applications] -o ouput.json`
-Generator an instance. The resulting JSON file is stored in `output.json`
+Resulting data are separated with tabulations. Fields description:
 
-*Example:* `instanceMaker -r 16 -p 16 -a 350 -o foo.json`
-Produce an instance stored in `foo.json`. The model consists consists of 16 racks, 16 nodes per rack, and 350 Applications.
-
-`./evaluator [-c] [-t timeout] [-o output] -i instance -a constraints -s scenario `
--c  find the reconfiguration plan with continuous restriction   
--t  solver timeout  
--o  output path for the result
--s  the reconfiguration scenario. It consists of [ve,he,sf,bs]
-
-*Example:* `Evaluator -m model.json -a application.json -s ve -t 60 -o result`
-
+1. Instance file name
+2. Scenario type (ve, he, sf, bs)
+3. Discrete (0) or Continuous (1) restriction
+4. Number of violated spread constraints
+5. Number of violated among constraints
+6. Number of violated splitAmong constraints
+7. Number of violated singleResourceCapacity constraints
+8. Number of violated MaxOnline constraints
+9. Number of affected SLAs
+10. Current CPU load
+11. Current Memory load
+12. CPU load once the plan is applied
+13. Memory load once the plan is applied
+14. core-RP building duration (ms.)
+15. RP-specialisation duration (ms.)
+16. solving duration (ms.)
+17. Estimated plan duration (sec.)
+18. Number of actions
