@@ -96,3 +96,7 @@ Resulting data are separated with tabulations. Fields description:
 16. solving duration (ms.)
 17. Estimated plan duration (sec.)
 18. Number of actions
+
+## Default workload
+The workload used for the paper published at HotDep 2013 is available in `hotdep-2013.tar.bz2`.
+
