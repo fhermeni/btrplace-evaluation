@@ -7,13 +7,17 @@
     </formats>
     <files>
         <file>
-            <source>LICENSE.txt</source>
+            <source>LICENSE</source>
             <outputDirectory>/</outputDirectory>
         </file>
         <file>
             <source>README.md</source>
             <outputDirectory>/</outputDirectory>
             <destName>README</destName>
+        </file>
+        <file>
+            <source>src/main/resources/hotdep-2013.tar.bz2</source>
+            <outputDirectory>/</outputDirectory>
         </file>
     </files>
      <fileSets>
