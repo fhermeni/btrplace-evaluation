@@ -1,10 +1,8 @@
-## Introduction
-
 [BtrPlace](http://btrp.inria.fr) is a virtual machines placement algorithm for hosting platforms. It can be customized
 by administrators to ensure the satisfaction of SLAs and to perform the administrative management operations.
 
-In this project, we evaluate the level of satisfaction of the constraint during the reconfiguration of datacenters due
-to the hardware failures or increasing in the workload of VMs.
+The code in this repository aims at evaluating the reliability of discrete and continuous versions of placement
+constraints available in BtrPlace.
 
 
 #Evaluation Protocol
@@ -100,3 +98,18 @@ Resulting data are separated with tabulations. Fields description:
 ## Default workload
 The workload used for the paper published at HotDep 2013 is available in `hotdep-2013.tar.bz2`.
 
+
+## Building from sources ##
+
+Requirements:
+* JDK 7+
+* maven 3+
+
+The source of the released versions are directly available in the `Tag` section.
+You can also download them using github features.
+Once downloaded, move to the source directory then execute the following command
+to make the distribution:
+
+    $ mvn clean assembly:assembly -DskipTests
+
+The resulting standalone distribution will be in `target/evaluation-1.0.tar.bz2`
