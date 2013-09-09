@@ -79,21 +79,22 @@ Resulting data are separated with tabulations. Fields description:
 1. Instance file name
 2. Scenario type (ve, he, sf, bs)
 3. Discrete (0) or Continuous (1) restriction
-4. Number of violated spread constraints
-5. Number of violated among constraints
-6. Number of violated splitAmong constraints
-7. Number of violated singleResourceCapacity constraints
-8. Number of violated MaxOnline constraints
-9. Number of affected SLAs
-10. Current CPU load
-11. Current Memory load
-12. CPU load once the plan is applied
-13. Memory load once the plan is applied
-14. core-RP building duration (ms.)
-15. RP-specialisation duration (ms.)
-16. solving duration (ms.)
-17. Estimated plan duration (sec.)
-18. Number of actions
+4. Solving status: -1<=> Unable to state about the feasibility, 0= No solution (proved), 1= At least 1 solution
+5. Number of violated spread constraints
+6. Number of violated among constraints
+7. Number of violated splitAmong constraints
+8. Number of violated singleResourceCapacity constraints
+9. Number of violated MaxOnline constraints
+10. Number of affected SLAs
+11. Current CPU load
+12. Current Memory load
+13. CPU load once the plan is applied
+14. Memory load once the plan is applied
+15. core-RP building duration (ms.)
+16. RP-specialisation duration (ms.)
+17. solving duration (ms.)
+18. Estimated plan duration (sec.)
+19. Number of actions
 
 ## Default workload
 The workload used for the paper published at HotDep 2013 is available in `hotdep-2013.tar.bz2`.

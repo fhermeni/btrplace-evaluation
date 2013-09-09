@@ -83,7 +83,7 @@ public class ServerFailures extends ReconfigurationScenario {
         try {
             plan = cra.solve(model, constraints);
             if (plan == null) {
-                sb.append(String.format("%s\tNo solution\n", instance));
+                reportIssue(true);
                 return false;
             } else {
                 for (Node n : failedNodes) {
@@ -95,7 +95,7 @@ public class ServerFailures extends ReconfigurationScenario {
             }
             result(plan, violatedConstraints, DCconstraint, affectedApps);
         } catch (SolverException e) {
-            sb.append(String.format("%s\t%s\n", instance, e.getMessage()));
+            reportIssue(false);
             return false;
         }  catch (Exception e) {
             throw new RuntimeException(e);

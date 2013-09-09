@@ -156,7 +156,7 @@ public abstract class ReconfigurationScenario implements Runnable {
             pc.toJSON(plan, b);
             b.close();
         }
-        sb.append(String.format("%s\t%s\t%d\t", new File(instance).getName(), rp_type, findContinuous ? 1 : 0));
+        sb.append(String.format("%s\t%s\t%d\t1\t", new File(instance).getName(), rp_type, findContinuous ? 1 : 0));
         //0: spread, 1: among, 2: splitAmong
         sb.append(String.format("%d\t%d\t%d\t", vc[0].size(), vc[1].size(), vc[2].size()));
         //0: singleResourceCapacity, 1: MaxOnline
@@ -169,6 +169,23 @@ public abstract class ReconfigurationScenario implements Runnable {
         sb.append(String.format("%f\t%f\t", load[0], load[1]));
         SolvingStatistics st = cra.getStatistics();
         sb.append(String.format("%d\t%d\t%d\t%d\t%d\n", st.getCoreRPBuildDuration(), st.getSpeRPDuration(), st.getSolvingDuration(), plan.getDuration(), plan.getSize()));
+    }
+
+    public void reportIssue(boolean noSolutions) {
+        sb.append(String.format("%s\t%s\t%d\t%d\t", new File(instance).getName(), rp_type, findContinuous ? 1 : 0, noSolutions ? 0 : -1));
+        //Unable to state about the resulting SLAs violations
+        sb.append("-\t-\t-\t");
+        //The same for the DC constraints
+        sb.append("-\t-\t-\t");
+        float[] load = currentLoad(model);
+        //0: ecu, 1: ram
+        sb.append(String.format("%f\t%f\t", load[0], load[1]));
+        //Unable to state about the future load
+        sb.append("-\t-\t");
+        SolvingStatistics st = cra.getStatistics();
+        //No plan
+        sb.append(String.format("%d\t%d\t%d\t0\t0\n", st.getCoreRPBuildDuration(), st.getSpeRPDuration(), st.getSolvingDuration()));
+
     }
 
     @Override
