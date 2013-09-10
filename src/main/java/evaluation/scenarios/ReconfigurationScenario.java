@@ -74,6 +74,7 @@ public abstract class ReconfigurationScenario implements Runnable {
 
     public void setTimeOut(int timeout) {
         TIME_OUT = timeout;
+        cra.setTimeLimit(timeout);
     }
 
     public void readData() throws JSONConverterException, ParseException, IOException {
@@ -184,8 +185,11 @@ public abstract class ReconfigurationScenario implements Runnable {
         sb.append("-\t-\t");
         SolvingStatistics st = cra.getStatistics();
         //No plan
-        sb.append(String.format("%d\t%d\t%d\t0\t0\n", st.getCoreRPBuildDuration(), st.getSpeRPDuration(), st.getSolvingDuration()));
-
+        if (st != null) {
+            sb.append(String.format("%d\t%d\t%d\t0\t0\n", st.getCoreRPBuildDuration(), st.getSpeRPDuration(), st.getSolvingDuration()));
+        } else {
+            sb.append("0\t0\t0\t0\t0\n");
+        }
     }
 
     @Override
