@@ -51,7 +51,7 @@ $ wc -l results/*/results.txt
      100 results/ve_continuous/results.txt
      100 results/ve_discrete/results.txt
      800 total
-#Yeah ! 100 results per file. The evaluation is finished
+#Yeah! 100 results per file. The evaluation is finished
 
 #Produce the datafile
 $ ./bin/mergeResults.sh results/*/results.txt > results/allResults.txt
@@ -66,7 +66,7 @@ Additional `evaluator*` scripts are available in the `bin` directory. They
 allow to process the workload at a finer grain.
 
 The raw results used in the paper is also available [online](http://btrp.inria.fr/data/hotdep-2013-results.tar.bz2),
-from the [BtrPlace Website](http://btrp.inria.fr)
+from the [BtrPlace Website](http://btrp.inria.fr).
 ## Generating a custom workload ##
 
 This can be done using the `instanceMaker` and the `instancesMaker` scripts:
