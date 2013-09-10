@@ -23,6 +23,8 @@ The resulting standalone distribution will be in `target/evaluation-1.0.tar.gz`
 
 ## Reproducing the results ##
 
+To run the experiments, you must have a running Java 7 environment.
+
 ```
 $ tree
  |- lib                          # dependencies
@@ -31,31 +33,46 @@ $ tree
  |- hotdep-2013.tar.bz2          # default workload
  |- hotdep-2013-results.tar.bz2  # results for the default workload
  \- bin                          # helper scripts for Unix and R
-```
 
-1. Extract the workload:
-  `$ tar xjf hotdep-2013.tar.bz2`
-2. Run the evaluator. Here using 8 machines listed in a `nodes` file
-   `$ ./bin/dist_evaluators.sh hotdep-2013 results`
-   You can follow the progress by looking at the number of results stored in the `results` folder using `$ wc -l results/*/results.txt`
-   The evaluation will be finished once there is 100 lines per file
-3. Produce the datafile
-   `$ ./bin/mergeResults.sh results/*/results.txt > results/allResults.txt`
-4. Analyse the data. This requires a [R](http://www.r-project.org/) distribution
-```
+#Extract the workload
+$ tar xfz hotdep-2013.tar.bz2
+
+#Run the evaluator. Here using dist_evaluators
+#to process the workload on the 8 nodes
+# listed in the `nodes` file
+$ ./bin/dist_evaluators.sh nodes hotdep-2013 results
+
+#Follow the progress
+$ wc -l results/*/results.txt
+     100 results/bs_continuous/results.txt
+     100 results/bs_discrete/results.txt
+     100 results/he_continuous/results.txt
+     100 results/he_discrete/results.txt
+     100 results/sf_continuous/results.txt
+     100 results/sf_discrete/results.txt
+     100 results/ve_continuous/results.txt
+     100 results/ve_discrete/results.txt
+     800 total
+#Yeah ! 100 results per file. That's over
+
+#Produce the datafile
+$ ./bin/mergeResults.sh results/*/results.txt > results/allResults.txt
+
+#Analyse the data using R
 $ mkdir results/pdfs
-$ ./bin/discrete_report.R results/allResults.txt results/pdfs/distribution.pdf
+$ ./bin/discrete_reports.R results/allResults.txt results/pdfs/distribution.pdf
 $ ./bin/overhead.R results/allResults.txt results/pdfs
 ```
 
-For a more fine grain evaluation, refer to the multiple `evaluate*` scripts in the `bin` directory
+Additional `evaluator*` scripts are available in the `bin` directory. They
+allow to process the workload at a finer grain.
 
 ## Generating a custom workload ##
 
 This can be done using the `instanceMaker` and the `instancesMaker` scripts:
 
 ```
-$ ./instanceMaker
+$ ./bin/instanceMaker
 Missing required option: o
 usage: InstanceMaker
  -a <arg>   number of applications
