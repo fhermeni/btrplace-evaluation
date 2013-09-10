@@ -22,9 +22,8 @@
     </files>
      <fileSets>
         <fileSet>
-            <fileMode>0755</fileMode>
             <directory>src/main/bin</directory>
-            <outputDirectory>/</outputDirectory>
+            <outputDirectory>/bin</outputDirectory>
         </fileSet>
     </fileSets>
     <dependencySets>
