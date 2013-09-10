@@ -15,6 +15,7 @@ import btrplace.solver.choco.DefaultChocoReconfigurationAlgorithm;
 import btrplace.solver.choco.constraint.CMaxOnlines;
 import btrplace.solver.choco.runner.SolvingStatistics;
 import evaluation.demo.Application;
+import evaluation.demo.PlanReader;
 import evaluation.generator.ApplicationConverter;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
@@ -169,7 +170,11 @@ public abstract class ReconfigurationScenario implements Runnable {
         //0: ecu, 1: ram
         sb.append(String.format("%f\t%f\t", load[0], load[1]));
         SolvingStatistics st = cra.getStatistics();
-        sb.append(String.format("%d\t%d\t%d\t%d\t%d\n", st.getCoreRPBuildDuration(), st.getSpeRPDuration(), st.getSolvingDuration(), plan.getDuration(), plan.getSize()));
+        sb.append(String.format("%d\t%d\t%d\t%d\t%d\t", st.getCoreRPBuildDuration(), st.getSpeRPDuration(), st.getSolvingDuration(), plan.getDuration(), plan.getSize()));
+        //
+        int [] actions = PlanReader.countActions(plan);
+        //0: BootVM, 1: MigrateVM, 2: Allocate, 3: BootNode, 4: ShutdownNode
+        sb.append(String.format("%d\t%d\t%d\t%d\t%d\n", actions[0], actions[1], actions[2], actions[3], actions[4]));
     }
 
     public void reportIssue(boolean noSolutions) {
@@ -186,9 +191,9 @@ public abstract class ReconfigurationScenario implements Runnable {
         SolvingStatistics st = cra.getStatistics();
         //No plan
         if (st != null) {
-            sb.append(String.format("%d\t%d\t%d\t0\t0\n", st.getCoreRPBuildDuration(), st.getSpeRPDuration(), st.getSolvingDuration()));
+            sb.append(String.format("%d\t%d\t%d\t0\t0\t0\t0\t0\t0\t0\n", st.getCoreRPBuildDuration(), st.getSpeRPDuration(), st.getSolvingDuration()));
         } else {
-            sb.append("0\t0\t0\t0\t0\n");
+            sb.append("0\t0\t0\t0\t0\t0\t0\t0\t0\t0\n");
         }
     }
 

@@ -31,15 +31,6 @@ public class PlanReader {
 
     }
 
-    public static void main(String[] args) {
-
-        PlanReader pr = new PlanReader(args[0], args[1], args[2]);
-        pr.readModel();
-        pr.readPlan();
-
-
-    }
-
     private void readModel() {
        Model model = ConverterTools.getModelFromFile(modelFile);
 //        validateConstraint = ConverterTools.getConstraints(model, path + "constraints" + id + ".json");
@@ -59,28 +50,18 @@ public class PlanReader {
         checkMap.put(maxOnline, 1000);
     }
 
-    public ReconfigurationPlan readPlan() {
+    /*public ReconfigurationPlan readPlan() throws IOException, JSONConverterException {
         ReconfigurationPlanConverter converter = new ReconfigurationPlanConverter();
         ReconfigurationPlan plan = null;
         try {
             plan = converter.fromJSON(new File(planFile));
-//            int[] act_types1 = countBootShutdown(plan);
-//            System.out.printf("%d\t%d\t", act_types1[0], act_types1[1]);
-
             double[] act_types = countActions(plan);
             System.out.printf("%f\t%f\t%f\n", act_types[0], act_types[1], act_types[2]);
-
-//            levelDependency(plan);
-
-//            System.out.println(calculateAverage(plan));
-//            System.out.println(plan);
-        } catch (IOException e) {
-//            System.err.println(); // File not exist
-        } catch (JSONConverterException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return plan;
-    }
+    }           */
 
     private void levelDependency(ReconfigurationPlan plan) {
         ArrayList<ArrayList<Action>> d = new ArrayList<>();
@@ -116,21 +97,15 @@ public class PlanReader {
         return sum;
     }
 
-    private double[] countActions(ReconfigurationPlan plan) {
-        int allocate = 0;
-        double[] count = new double[3];
+    public static int[] countActions(ReconfigurationPlan plan) {
+        int[] count = new int[5];
         for (Action a : plan) {
             if (a instanceof BootVM) count[0]++;
             else if (a instanceof MigrateVM) count[1]++;
-            else if (a instanceof BootNode) count[2]++;
-            else if (a instanceof Allocate) allocate++;
+            else if (a instanceof Allocate) count[2]++;
+            else if (a instanceof BootNode) count[3]++;
+            else if (a instanceof ShutdownNode) count[4]++;
         }
-
-        int size = plan.getSize();
-        size -= allocate;
-        count[0] = count[0] / size;
-        count[1] = count[1] / size;
-        count[2] = count[2] / size;
         return count;
     }
 

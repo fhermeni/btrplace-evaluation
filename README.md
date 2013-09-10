@@ -103,3 +103,8 @@ The file is a CSV file with tabulations used as a separator.
 17. solving duration (ms.)
 18. Estimated plan duration (sec.)
 19. Number of actions
+20. Number of BootVM actions
+21. Number of MigrateVM actions
+22. Number of Allocate actions
+23. Number of BootNode actions
+24. Number of ShutdownNode actions
