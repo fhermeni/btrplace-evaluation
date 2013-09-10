@@ -5,7 +5,7 @@
 if [ $# -lt 2 ]; then
 	echo "Usage: $0 input output ..."
 	echo "\tinput: folder containing the instances json files"
-	echo "\toutout: output folder for the resulting plan"	
+	echo "\toutput: output folder for the resulting plan"
 	echo "\tAdditional parameters will be passed to 'evaluator'"
 	exit 1
 fi
@@ -16,5 +16,5 @@ mkdir -p $output
 shift
 shift
 for i in $(ls $input/*.json); do
-	./evaluator -i $i -p $output/plan-$(basename $i .json).json -r $output/results.txt $*
+	./bin/evaluator.sh -i $i -p $output/plan-$(basename $i .json).json -r $output/results.txt $*
 done

@@ -14,6 +14,6 @@ mkdir -p $output
 shift
 shift
 for i in $(seq 1 $nb); do
-	./instanceMaker -o $output/$i.json $*
+	./bin/instanceMaker.sh -o $output/$i.json $*
 	echo "Instance $i stored in $output/$i.json"
 done

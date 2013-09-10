@@ -16,10 +16,10 @@ nb=1
 cwd=$(pwd)
 for scenario in ve he sf bs; do
 	node=$(sed -n ${nb}p ${machines})
- 	oarsh ${node} "cd ${cwd}; ./evaluators ${input} ${output}/${scenario}_discrete -s ${scenario}" &
+ 	oarsh ${node} "cd ${cwd}; ./bin/evaluators.sh ${input} ${output}/${scenario}_discrete -s ${scenario}" &
 	nb=$(($nb + 1))
 	node=$(sed -n ${nb}p ${machines})
-	oarsh ${node} "cd ${cwd}; ./evaluators ${input} ${output}/${scenario}_continuous -s ${scenario} -c" &
+	oarsh ${node} "cd ${cwd}; ./bin/evaluators.sh ${input} ${output}/${scenario}_continuous -s ${scenario} -c" &
 	nb=$(($nb + 1))
 done
 wait

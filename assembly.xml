@@ -15,14 +15,6 @@
             <outputDirectory>/</outputDirectory>
             <destName>README</destName>
         </file>
-        <file>
-            <source>src/main/resources/hotdep-2013.tar.bz2</source>
-            <outputDirectory>/</outputDirectory>
-        </file>
-        <file>
-            <source>src/main/resources/hotdep-2013-results.tar.bz2</source>
-            <outputDirectory>/</outputDirectory>
-        </file>
     </files>
      <fileSets>
         <fileSet>
