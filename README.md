@@ -51,22 +51,21 @@ $ wc -l results/*/results.txt
 $ ./bin/mergeResults.sh results/*/results.txt > results/allResults.txt
 
 #Analyse the data using R
-$ mkdir results/pdfs
-$ ./bin/discrete_reports.R results/allResults.txt results/pdfs/distribution.pdf
-$ ./bin/overhead.R results/allResults.txt results/pdfs
+$ ./bin/discrete_reports.R results/allResults.txt results/distribution.pdf
+$ ./bin/overhead.R results/allResults.txt results/
 ```
 
-Additional `evaluator*` scripts are available in the `bin` directory. They
+Additional `evaluator*.sh` scripts are available in the `bin` directory. They
 allow to process the workload at a finer grain.
 
 The raw results used in the paper is also available [online](http://btrp.inria.fr/pubs/hotdep-2013-results.tar.bz2),
 from the [BtrPlace Website](http://btrp.inria.fr).
 ## Generating a custom workload ##
 
-This can be done using the `instanceMaker` and the `instancesMaker` scripts:
+This can be done using the `bin/instanceMaker.sh` and the `bin/instancesMaker.sh` scripts:
 
 ```
-$ ./bin/instanceMaker
+$ ./bin/instanceMaker.sh
 Missing required option: o
 usage: InstanceMaker
  -a <arg>   number of applications
