@@ -26,13 +26,7 @@ The resulting standalone distribution will be in `target/evaluation-1.0-SNAPSHOT
 To run the experiments, you must have a running Java 7 environment.
 
 ```
-$ tree
- |- lib                          # dependencies
- |- LICENSE                      # LGPL v3 LICENSE
- |- README                       # This file
- \- bin                          # helper scripts for Unix and R
-
-#Download and extract the [workload](http://btrp.inria.fr/data/hotdep-2013.tar.bz2)
+#Download and extract the [workload](http://btrp.inria.fr/hotdep-2013.tar.bz2)
 #from [BtrPlace Website](http://btrp.inria.fr)
 
 #Run the evaluator. Here using dist_evaluators
@@ -65,7 +59,7 @@ $ ./bin/overhead.R results/allResults.txt results/pdfs
 Additional `evaluator*` scripts are available in the `bin` directory. They
 allow to process the workload at a finer grain.
 
-The raw results used in the paper is also available [online](http://btrp.inria.fr/data/hotdep-2013-results.tar.bz2),
+The raw results used in the paper is also available [online](http://btrp.inria.fr/pubs/hotdep-2013-results.tar.bz2),
 from the [BtrPlace Website](http://btrp.inria.fr).
 ## Generating a custom workload ##
 
