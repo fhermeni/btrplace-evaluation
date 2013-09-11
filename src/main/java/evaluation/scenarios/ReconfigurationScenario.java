@@ -42,7 +42,7 @@ public abstract class ReconfigurationScenario implements Runnable {
     StringBuilder sb;
     ShareableResource ecu;
     ShareableResource ram;
-    String rp_type;
+    int rp_type;
     String instance;
     String outPath;
 
@@ -158,7 +158,7 @@ public abstract class ReconfigurationScenario implements Runnable {
             pc.toJSON(plan, b);
             b.close();
         }
-        sb.append(String.format("%s\t%s\t%d\t1\t", new File(instance).getName(), rp_type, findContinuous ? 1 : 0));
+        sb.append(String.format("%s\t%d\t%d\t1\t", new File(instance).getName(), rp_type, findContinuous ? 1 : 0));
         //0: spread, 1: among, 2: splitAmong
         sb.append(String.format("%d\t%d\t%d\t", vc[0].size(), vc[1].size(), vc[2].size()));
         //0: singleResourceCapacity, 1: MaxOnline
@@ -178,7 +178,7 @@ public abstract class ReconfigurationScenario implements Runnable {
     }
 
     public void reportIssue(boolean noSolutions) {
-        sb.append(String.format("%s\t%s\t%d\t%d\t", new File(instance).getName(), rp_type, findContinuous ? 1 : 0, noSolutions ? 0 : -1));
+        sb.append(String.format("%s\t%d\t%d\t%d\t", new File(instance).getName(), rp_type, findContinuous ? 1 : 0, noSolutions ? 0 : -1));
         //Unable to state about the resulting SLAs violations
         sb.append("-\t-\t-\t");
         //The same for the DC constraints

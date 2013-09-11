@@ -22,7 +22,7 @@ public class VerticalElasticity extends ReconfigurationScenario {
 
     public VerticalElasticity(String in, String out) throws ParseException, IOException, JSONConverterException {
         super(in, out);
-        rp_type = "ve";
+        rp_type = 0;
     }
 
     public void run() {

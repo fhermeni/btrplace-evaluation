@@ -4,8 +4,10 @@ pdf(file=paste(args[2]), width=5, height=4)
 par(mar=c(3, 3.2, 1, 1),mgp=c(1.8,0.6,0), cex=1.3)
 cnt <- read.table(args[1], header=T, sep="\t", na.strings=c("-"))
 cnt$duration = cnt$computationDuration / 1000 + cnt$coreRP / 1000+ cnt$speRP / 1000
-cnt = cnt[cnt$scenario == "he", c("duration","continuous")]
+cnt = cnt[cnt$scenario == 1, c("duration","continuous")]
 m = max(cnt$duration)
+md = max(cnt$duration[cnt$continuous == 0])
+cat("Maximum duration for discrete/he ", md, "\n")
 cnt$duration[is.na(cnt$duration)] <- 4000
 conti = cnt[cnt$continuous == 1, ]
 dist = cnt[cnt$continuous == 0, ]

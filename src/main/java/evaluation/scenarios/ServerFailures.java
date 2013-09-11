@@ -27,7 +27,7 @@ public class ServerFailures extends ReconfigurationScenario {
         super(in, out);
         failedNodes = new ArrayList<>();
         restartVMs = new ArrayList<>();
-        rp_type = "sf";
+        rp_type = 2;
     }
 
     @Override

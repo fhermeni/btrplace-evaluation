@@ -78,7 +78,7 @@ usage: InstanceMaker
 The file is a CSV file with tabulations used as a separator.
 
 1. Instance file name
-2. Scenario type (ve, he, sf, bs)
+2. Scenario type: 0=ve, 1=he, 2=sf, 3=bs
 3. Discrete (0) or Continuous (1) restriction
 4. Solving status: -1= Unable to state about the feasibility, 0= No solution (proved), 1= At least 1 solution
 5. Number of violated spread constraints

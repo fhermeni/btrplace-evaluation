@@ -25,7 +25,7 @@ public class HorizontalElasticity extends ReconfigurationScenario {
     public HorizontalElasticity(String in, String out) throws ParseException, IOException, JSONConverterException  {
         super(in, out);
         cloneVMs = new ArrayList<>();
-        rp_type = "he";
+        rp_type = 1;
     }
 
     @Override

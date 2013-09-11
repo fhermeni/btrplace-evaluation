@@ -23,7 +23,7 @@ public class BootStorm extends ReconfigurationScenario {
 
     public BootStorm(String in, String out) throws ParseException, IOException, JSONConverterException {
         super(in, out);
-        rp_type = "bs";
+        rp_type = 3;
     }
 
     @Override
