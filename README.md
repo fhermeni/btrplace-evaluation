@@ -19,7 +19,7 @@ to make the distribution:
 
     $ mvn clean assembly:assembly -DskipTests
 
-The resulting standalone distribution will be in `target/evaluation-1.0-SNAPSHOT.tar.gz`
+The resulting standalone distribution will be in `target/hotdep2013-1.0-dist.tar.gz`
 
 ## Reproducing the results ##
 
