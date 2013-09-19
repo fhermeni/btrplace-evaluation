@@ -10,9 +10,12 @@ cat("Maximum duration for discrete/ve ", max(cnt$duration[cnt$continuous == 0]),
 cnt$duration[is.na(cnt$duration)] <- 4000
 conti = cnt[cnt$continuous == 1, ]
 dist = cnt[cnt$continuous == 0, ]
-colors <- c(grey(0.6), grey(0))
+oh = (1 - mean(dist$duration) / mean(conti$duration)) * 100
+cat("Computational overhead for continuous/ve: " , oh, "%\n")
+
+colors <- c(grey(0.8), grey(0))
 plot(ecdf(conti$duration), yaxt='n', xlim=c(5,330), col=grey(0), lty=1, log="x", do.points=FALSE, lwd=5, xlab="Duration (sec.)", ylab="Solved instances", main="", verticals = TRUE, panel.first=grid())
 legend(40,0.3, c("discrete","continuous"), col=colors, cex=1, lty=1, lwd=5, border = FALSE, bty="n")
-plot(ecdf(dist$duration), xlim=c(5,330), do.points=FALSE, lwd=5, col=grey(0.6), add=TRUE, verticals = TRUE)
+plot(ecdf(dist$duration), xlim=c(5,330), do.points=FALSE, lwd=5, col=grey(0.8), add=TRUE, verticals = TRUE)
 axis(2,at=seq(0,1,0.2), labels=seq(0,100,20))
 foo <- dev.off()

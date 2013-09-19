@@ -21,12 +21,15 @@ violatedSLAs = cnt[, c("scenario", "violatedSLAs","bootVM","migrateVM","bootNode
 g = aggregate(violatedSLAs, by=list(violatedSLAs$scenario), FUN=mean, na.rm=TRUE)
 g$scenario <- factor(g$scenario, labels= c("Vertical Elasticity", "Horizontal Elasticity", "Server Failure", "Boot Storm"))
 g$Group.1 = NULL
+g$bootVM = signif(g$bootVM, digits=4)
+g$migrateVM = signif(g$migrateVM, digits=4)
+g$bootNode = signif(g$bootNode, digits=4)
+g$shutdownNode = signif(g$shutdownNode, digits=4)
 print(g)
 
 #Number of violations for maxOnlines:
 cat("Instances with a violation of maxOnlines:\n")
 sc1 <- cnt[cnt$maxOnline > 0, c("scenario", "violatedSLAs")]
-#sc1$scenario <- factor(sc1$scenario, labels= c("Vertical Elasticity", "Horizontal Elasticity", "Server Failure", "Boot Storm"))
 print(sc1)
 
 #Distribution of the actions. We ignore allocate actions
@@ -71,13 +74,7 @@ maxOnlines$constraint = 4
 constraints <- rbind(spreads, amongs, splitAmongs, maxOnlines)
 # 2. Scenario type: 1=ve, 2=he, 3=sf, 4=bs
 constraints$scenario <- factor(constraints$scenario, labels= c("Vertical\nElasticity", "Horizontal\nElasticity", "Server\nFailure", "Boot\nStorm"))
-#constraints$scenario[constraints$scenario == "bs"] = "Boot\nStorm"
-#constraints$scenario[constraints$scenario == "he"] = "Horizontal\nElasticity"
-#constraints$scenario[constraints$scenario == "ve"] = "Vertical\nElasticity"
-#constraints$scenario[constraints$scenario == "sf"] = "Server\nFailure"
-#print(constraints[constraints$instance == "100.json", ])
 constraints$constraint <- factor(constraints$constraint, labels = c("spread   ","among   ","splitAmong   ", "maxOnline"))
-#print(constraints[constraints$instance == "100.json", ])
 # Distribution of the violations
 constraints$violations = constraints$violations / constraints$violatedSLAs * 100	
 ggplot(aes(y = violations, x = scenario, fill = constraint), data = constraints) + geom_boxplot() + theme_bw(26) + xlab("") + theme(legend.key = element_blank(), legend.position = "top", legend.key.size = unit(1.4, "cm")) + scale_fill_manual(name="",values=grey(c(0.95, 0.8, 0.5, 0.2)))
