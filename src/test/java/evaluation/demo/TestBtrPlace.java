@@ -114,7 +114,7 @@ public class TestBtrPlace {
         ShareableResource cpu = new ShareableResource("cpu", 32, 1);
         model.attach(cpu);
 
-        int NODE = 100;
+        int NODE = 10;
         for (int i = 0; i < NODE; i++) {
             model.getMapping().addOnlineNode(model.newNode());
         }
@@ -143,7 +143,7 @@ public class TestBtrPlace {
         System.out.printf("%f %f %f", capacity, used, used / capacity * 100);
     }
 
-    @Test
+    /*@Test
     public void testLonely() throws SolverException {
         Model model = new DefaultModel();
 
@@ -192,7 +192,7 @@ public class TestBtrPlace {
         Assert.assertNotNull(plan);
         System.out.println(plan.getResult().getMapping());
         System.out.println(plan);
-    }
+    }                  */
 
     @Test
     public void testSplitAmong() {
@@ -241,7 +241,7 @@ public class TestBtrPlace {
         constraints.add(maxOnline);
 
         ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
-        cra.getConstraintMapper().register(new CMaxOnline.Builder());
+
         ReconfigurationPlan solve = null;
         try {
             solve = cra.solve(model, constraints);
