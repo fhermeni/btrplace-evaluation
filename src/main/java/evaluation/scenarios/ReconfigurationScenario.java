@@ -12,7 +12,7 @@ import btrplace.model.view.ShareableResource;
 import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.choco.ChocoReconfigurationAlgorithm;
 import btrplace.solver.choco.DefaultChocoReconfigurationAlgorithm;
-import btrplace.solver.choco.constraint.CMaxOnlines;
+import btrplace.solver.choco.constraint.CMaxOnline;
 import btrplace.solver.choco.runner.SolvingStatistics;
 import evaluation.demo.Application;
 import evaluation.demo.PlanReader;
@@ -88,7 +88,7 @@ public abstract class ReconfigurationScenario implements Runnable {
             applications = ac.listFromJSON((JSONArray) o.get("slas"));
             ecu = (ShareableResource) model.getView(ShareableResource.VIEW_ID_BASE + "ecu");
             ram = (ShareableResource) model.getView(ShareableResource.VIEW_ID_BASE + "ram");
-            cra.getConstraintMapper().register(new CMaxOnlines.Builder());
+            cra.getConstraintMapper().register(new CMaxOnline.Builder());
             checkMap = new HashMap<>(1200);
             for (Application a : applications) {
                 for (SatConstraint s : a.getConstraints()) {

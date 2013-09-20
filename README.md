@@ -19,20 +19,20 @@ to make the distribution:
 
     $ mvn clean assembly:assembly -DskipTests
 
-The resulting standalone distribution will be in `target/hotdep2013-1.0-dist.tar.gz`
+The resulting standalone distribution will be in `target/hotdep-2013-1.0-dist.tar.gz`
 
 ## Reproducing the results ##
 
 To run the experiments, you must have a running Java 7 environment.
 
 ```
-#Download and extract the [workload](http://btrp.inria.fr/hotdep-2013.tar.bz2)
+#Download and extract the [workload](http://btrp.inria.fr/hotdep-2013-workload.tar.bz2)
 #from [BtrPlace Website](http://btrp.inria.fr)
 
 #Run the evaluator. Here using dist_evaluators
-#to process the workload 'hotdep-2013' on the 8 nodes
+#to process the workload 'hotdep-2013-workload' on the 8 nodes
 # listed in the 'nodes' file
-$ ./bin/dist_evaluators.sh nodes hotdep-2013 results
+$ ./bin/dist_evaluators.sh nodes hotdep-2013-workload results
 
 #Follow the progress
 $ wc -l results/*/results.txt
