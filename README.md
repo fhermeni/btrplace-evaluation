@@ -8,7 +8,7 @@ related to BtrPlace. see [the BtrPlace website](http://btrp.inria.fr).
 
 ## Binary distribution ##
 
-See http://btrp.inria.fr/repos/releases/btrplace/hotdep2013/
+See http://btrp.inria.fr/repos/releases/btrplace/hotdep-2013/
 
 ## Building from sources ##
 
