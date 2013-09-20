@@ -194,6 +194,7 @@ public class TestBtrPlace {
         System.out.println(plan);
     }                  */
 
+    /*
     @Test
     public void testSplitAmong() {
         Model model = new DefaultModel();
@@ -250,7 +251,8 @@ public class TestBtrPlace {
         }
         Assert.assertNotNull(solve);
     }
-
+    */
+     /*
     @Test
     public void testServerFailures() {
         Model model = new DefaultModel();
@@ -313,7 +315,7 @@ public class TestBtrPlace {
         }
         Assert.assertNotNull(solve);
     }
-
+       */
 
     @Test
     public void testArays() {
