@@ -6,6 +6,10 @@ The code in this repository aims at reproducing the experiments related to the f
 For any questions about the paper, the experiments, or basically anything
 related to BtrPlace. see [the BtrPlace website](http://btrp.inria.fr).
 
+## Binary distribution ##
+
+See http://btrp.inria.fr/repos/releases/btrplace/hotdep2013/
+
 ## Building from sources ##
 
 Requirements:
