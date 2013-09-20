@@ -7,7 +7,7 @@ import btrplace.plan.ReconfigurationPlan;
 import btrplace.solver.SolverException;
 import btrplace.solver.choco.ChocoReconfigurationAlgorithm;
 import btrplace.solver.choco.DefaultChocoReconfigurationAlgorithm;
-import btrplace.solver.choco.constraint.CMaxOnlines;
+import btrplace.solver.choco.constraint.CMaxOnline;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -241,7 +241,7 @@ public class TestBtrPlace {
         constraints.add(maxOnline);
 
         ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
-        cra.getConstraintMapper().register(new CMaxOnlines.Builder());
+        cra.getConstraintMapper().register(new CMaxOnline.Builder());
         ReconfigurationPlan solve = null;
         try {
             solve = cra.solve(model, constraints);
@@ -304,7 +304,7 @@ public class TestBtrPlace {
         constraints.add(maxOnline);
 
         ChocoReconfigurationAlgorithm cra = new DefaultChocoReconfigurationAlgorithm();
-        cra.getConstraintMapper().register(new CMaxOnlines.Builder());
+        cra.getConstraintMapper().register(new CMaxOnline.Builder());
         ReconfigurationPlan solve = null;
         try {
             solve = cra.solve(model, constraints);
